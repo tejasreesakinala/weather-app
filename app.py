@@ -3,29 +3,25 @@ import requests
 import pandas as pd
 import plotly.express as px
 import geocoder
-from difflib import get_close_matches
-
 
 API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 
 st.set_page_config(page_title="Weather Pro", layout="wide")
 
-# ================= BACKGROUND =================
+# ================= UI STYLE =================
 st.markdown("""
 <style>
 .stApp {
     background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #1c92d2);
     background-size: 400% 400%;
-    animation: gradient 12s ease infinite;
+    animation: gradient 10s ease infinite;
     color: white;
 }
-
 @keyframes gradient {
     0% {background-position: 0% 50%;}
     50% {background-position: 100% 50%;}
     100% {background-position: 0% 50%;}
 }
-
 .card {
     background: rgba(255,255,255,0.1);
     padding: 20px;
@@ -51,152 +47,119 @@ def detect_location():
             if data:
                 city = data[0]["name"].lower()
 
-                # Fix wrong detections
                 if city in ["hyderabad", "the dalles", ""]:
                     return "suryapet"
 
                 return city
 
         return "suryapet"
-
     except:
         return "suryapet"
+
+# ================= SEARCH API =================
+def search_city(query):
+    url = f"http://api.openweathermap.org/geo/1.0/direct?q={query}&limit=5&appid={API_KEY}"
+    response = requests.get(url).json()
+
+    cities = []
+    for place in response:
+        name = place["name"]
+        country = place["country"]
+        cities.append(f"{name}, {country}")
+
+    return cities
 
 # ================= SESSION INIT =================
 if "city" not in st.session_state:
     st.session_state["city"] = detect_location()
 
-if "auto_detect" not in st.session_state:
-    st.session_state["auto_detect"] = False
-
-# ================= HANDLE AUTO DETECT (BEFORE INPUT) =================
-if st.session_state["auto_detect"]:
-    st.session_state["city"] = detect_location()
-    st.session_state["auto_detect"] = False
-
-# ================= INPUT =================
+# ================= SEARCH UI =================
 col1, col2 = st.columns([3,1])
 
 with col1:
-    st.text_input("Enter City", key="city")
+    search = st.text_input("🔍 Search City", value=st.session_state["city"])
+
+    if search:
+        suggestions = search_city(search)
+
+        if suggestions:
+            selected = st.selectbox("Suggestions", suggestions)
+            st.session_state["city"] = selected.split(",")[0].lower()
 
 with col2:
     st.write("")
     if st.button("📍 Auto Detect"):
-        st.session_state["auto_detect"] = True
+        st.session_state["city"] = detect_location()
         st.rerun()
 
-# always use this
 city = st.session_state["city"].lower()
-# ================= ALIASES =================
-# ================= SMART CITY SYSTEM =================
-city_alias = {
-    # Telangana
-    "ranga reddy": "hyderabad",
-    "rangareddy": "hyderabad",
-    "medchal": "hyderabad",
-    "sangareddy": "hyderabad",
-    "karimnagar": "karimnagar",
-    "warangal": "warangal",
-    "suryapet": "suryapet",
-
-    # Andhra
-    "east godavari": "rajahmundry",
-    "west godavari": "eluru",
-    "krishna": "vijayawada",
-    "prakasam": "ongole",
-
-    # India common
-    "vizag": "visakhapatnam",
-    "vishakapatnam": "visakhapatnam",
-    "hyd": "hyderabad",
-    "secunderabad": "hyderabad",
-    "bangalore": "bengaluru",
-    "bombay": "mumbai",
-    "madras": "chennai",
-    "calcutta": "kolkata",
-    "delhi": "new delhi"
-}
-
-# STEP 1: Direct match
-if city in city_alias:
-    city = city_alias[city]
-
-# STEP 2: Fuzzy match (handles typos)
-else:
-    match = get_close_matches(city, city_alias.keys(), n=1, cutoff=0.7)
-    if match:
-        city = city_alias[match[0]]
 
 # ================= WEATHER =================
 if st.button("Get Weather"):
-    if city:
-        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
-        data = requests.get(url).json()
+    with st.spinner("Fetching weather... 🌦"):
 
-        if str(data.get("cod")) != "200":
-            st.error("❌ City not found")
-        else:
-            temp = data["main"]["temp"]
-            feels = data["main"]["feels_like"]
-            humidity = data["main"]["humidity"]
-            wind = data["wind"]["speed"]
-            weather = data["weather"][0]["description"]
+        if city:
+            url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+            data = requests.get(url).json()
 
-            # ================= ICON =================
-            if "clear" in weather:
-                icon = "☀️"
-            elif "cloud" in weather:
-                icon = "☁️"
-            elif "rain" in weather:
-                icon = "🌧"
-            elif "storm" in weather:
-                icon = "⛈"
+            if str(data.get("cod")) != "200":
+                st.error("❌ City not found")
             else:
-                icon = "🌤"
+                temp = data["main"]["temp"]
+                feels = data["main"]["feels_like"]
+                humidity = data["main"]["humidity"]
+                wind = data["wind"]["speed"]
+                weather = data["weather"][0]["description"]
 
-            # ================= DISPLAY =================
-            col1, col2 = st.columns(2)
+                # ICON
+                if "clear" in weather:
+                    icon = "☀️"
+                elif "cloud" in weather:
+                    icon = "☁️"
+                elif "rain" in weather:
+                    icon = "🌧"
+                elif "storm" in weather:
+                    icon = "⛈"
+                else:
+                    icon = "🌤"
 
-            with col1:
-                st.markdown('<div class="card">', unsafe_allow_html=True)
-                st.success(f"📍 {city.title()}")
+                col1, col2 = st.columns(2)
 
-                st.markdown(f"# {icon} {temp}°C")
+                with col1:
+                    st.markdown('<div class="card">', unsafe_allow_html=True)
+                    st.success(f"📍 {city.title()}")
+                    st.markdown(f"# {icon} {temp}°C")
+                    st.metric("Feels Like", f"{feels} °C")
+                    st.metric("Humidity", f"{humidity}%")
+                    st.metric("Wind", f"{wind} m/s")
+                    st.write(f"Condition: {weather.title()}")
+                    st.markdown('</div>', unsafe_allow_html=True)
 
-                st.metric("Feels Like", f"{feels} °C")
-                st.metric("Humidity", f"{humidity}%")
-                st.metric("Wind Speed", f"{wind} m/s")
+                with col2:
+                    lat = data["coord"]["lat"]
+                    lon = data["coord"]["lon"]
 
-                st.write(f"Condition: {weather.title()}")
-                st.markdown('</div>', unsafe_allow_html=True)
+                    df = pd.DataFrame({"lat":[lat], "lon":[lon]})
+                    st.map(df)
 
-            # ================= MAP =================
-            with col2:
-                lat = data["coord"]["lat"]
-                lon = data["coord"]["lon"]
+                # FORECAST
+                st.subheader("📊 5-Day Forecast")
 
-                df = pd.DataFrame({"lat":[lat], "lon":[lon]})
-                st.map(df)
+                forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={API_KEY}&units=metric"
+                forecast_data = requests.get(forecast_url).json()
 
-            # ================= FORECAST =================
-            st.subheader("📊 5-Day Forecast")
+                temps = []
+                days = []
 
-            forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={API_KEY}&units=metric"
-            forecast_data = requests.get(forecast_url).json()
+                for i in range(0,40,8):
+                    item = forecast_data["list"][i]
+                    temps.append(item["main"]["temp"])
+                    days.append(item["dt_txt"].split()[0])
 
-            temps = []
-            days = []
+                df_chart = pd.DataFrame({
+                    "Day": days,
+                    "Temperature": temps
+                })
 
-            for i in range(0,40,8):
-                item = forecast_data["list"][i]
-                temps.append(item["main"]["temp"])
-                days.append(item["dt_txt"].split()[0])
-
-            df_chart = pd.DataFrame({
-                "Day": days,
-                "Temperature": temps
-            })
-
-            fig = px.line(df_chart, x="Day", y="Temperature", markers=True)
-            st.plotly_chart(fig, use_container_width=True)
+                fig = px.line(df_chart, x="Day", y="Temperature", markers=True)
+                st.plotly_chart(fig, use_container_width=True)
