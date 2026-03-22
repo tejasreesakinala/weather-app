@@ -8,18 +8,27 @@ API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 
 st.set_page_config(page_title="Weather Pro", layout="wide")
 
-# 🌈 UI STYLE
+# ================= BACKGROUND ANIMATION =================
 st.markdown("""
 <style>
 .stApp {
-    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #1c92d2);
+    background-size: 400% 400%;
+    animation: gradient 12s ease infinite;
     color: white;
 }
+
+@keyframes gradient {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+}
+
 .card {
     background: rgba(255,255,255,0.1);
     padding: 20px;
-    border-radius: 15px;
-    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    backdrop-filter: blur(12px);
 }
 </style>
 """, unsafe_allow_html=True)
@@ -34,15 +43,14 @@ def detect_location():
         if g.latlng:
             lat, lon = g.latlng
 
-            # Reverse geocoding using OpenWeather
             url = f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}"
             data = requests.get(url).json()
 
             if data:
                 city = data[0]["name"].lower()
 
-                # 🔥 Fix wrong detection
-                if city in ["hyderabad", "the dalles"]:
+                # Fix wrong detections
+                if city in ["hyderabad", "the dalles", ""]:
                     return "suryapet"
 
                 return city
@@ -51,24 +59,30 @@ def detect_location():
 
     except:
         return "suryapet"
+
+# ================= SESSION STATE =================
+if "city" not in st.session_state:
+    st.session_state.city = detect_location()
+
 # ================= INPUT =================
 col1, col2 = st.columns([3,1])
 
 with col1:
-    auto_city=detect_location()
-    city = st.text_input("Enter City", value=auto_city).lower()
+    city = st.text_input("Enter City", value=st.session_state.city).lower()
 
 with col2:
     st.write("")
     if st.button("📍 Auto Detect"):
-        city = detect_location().lower()
+        st.session_state.city = detect_location()
+        st.rerun()
 
-# 🔥 aliases
+# ================= ALIASES =================
 aliases = {
     "vizag": "visakhapatnam",
     "hyd": "hyderabad",
     "delhi": "new delhi"
 }
+
 if city in aliases:
     city = aliases[city]
 
@@ -79,7 +93,7 @@ if st.button("Get Weather"):
         data = requests.get(url).json()
 
         if str(data.get("cod")) != "200":
-            st.error("City not found")
+            st.error("❌ City not found")
         else:
             temp = data["main"]["temp"]
             feels = data["main"]["feels_like"]
@@ -87,8 +101,17 @@ if st.button("Get Weather"):
             wind = data["wind"]["speed"]
             weather = data["weather"][0]["description"]
 
-            sunrise = data["sys"]["sunrise"]
-            sunset = data["sys"]["sunset"]
+            # ================= ICON =================
+            if "clear" in weather:
+                icon = "☀️"
+            elif "cloud" in weather:
+                icon = "☁️"
+            elif "rain" in weather:
+                icon = "🌧"
+            elif "storm" in weather:
+                icon = "⛈"
+            else:
+                icon = "🌤"
 
             # ================= DISPLAY =================
             col1, col2 = st.columns(2)
@@ -97,12 +120,13 @@ if st.button("Get Weather"):
                 st.markdown('<div class="card">', unsafe_allow_html=True)
                 st.success(f"📍 {city.title()}")
 
-                st.metric("🌡 Temperature", f"{temp} °C")
-                st.metric("🤒 Feels Like", f"{feels} °C")
-                st.metric("💧 Humidity", f"{humidity}%")
-                st.metric("🌬 Wind", f"{wind} m/s")
+                st.markdown(f"# {icon} {temp}°C")
 
-                st.write(f"☁ {weather.title()}")
+                st.metric("Feels Like", f"{feels} °C")
+                st.metric("Humidity", f"{humidity}%")
+                st.metric("Wind Speed", f"{wind} m/s")
+
+                st.write(f"Condition: {weather.title()}")
                 st.markdown('</div>', unsafe_allow_html=True)
 
             # ================= MAP =================
