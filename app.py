@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import pandas as pd
 import plotly.express as px
-import geocoder
 import time
 from difflib import get_close_matches
 
@@ -10,7 +9,7 @@ API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 
 st.set_page_config(page_title="WeatherX", layout="wide")
 
-# ================= SMART CITY FIX =================
+# ================= SMART SEARCH =================
 city_alias = {
     "ranga reddy": "hyderabad",
     "rangareddy": "hyderabad",
@@ -28,7 +27,7 @@ city_alias = {
     "delhi": "new delhi"
 }
 
-def normalize_city(city):
+def smart_city(city):
     city = city.lower()
 
     if city in city_alias:
@@ -40,100 +39,20 @@ def normalize_city(city):
 
     return city
 
-# ================= UI STYLE =================
-st.markdown("""
-<style>
-.stApp {
-    background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364);
-    color: white;
-}
-
-/* Glass */
-.card {
-    background: rgba(255,255,255,0.08);
-    padding: 25px;
-    border-radius: 20px;
-    backdrop-filter: blur(15px);
-}
-
-/* FIX CLOUD LOOP (NO STOP) */
-.cloud {
-    position: absolute;
-    width: 140px;
-    height: 60px;
-    background: rgba(255,255,255,0.85);
-    border-radius: 60px;
-    animation: moveClouds 50s linear infinite;
-    opacity: 0.9;
-}
-
-.cloud::before {
-    content:'';
-    position:absolute;
-    top:-25px;
-    left:25px;
-    width:80px;
-    height:80px;
-    background:white;
-    border-radius:50%;
-}
-
-.cloud::after {
-    content:'';
-    position:absolute;
-    top:-15px;
-    left:70px;
-    width:60px;
-    height:60px;
-    background:white;
-    border-radius:50%;
-}
-
-/* CONTINUOUS LOOP (NO STOP EFFECT) */
-@keyframes moveClouds {
-    0% { transform: translateX(-200px); }
-    100% { transform: translateX(120vw); }
-}
-
-/* SUN */
-.sun {
-    position: absolute;
-    top: 60px;
-    left: 65%;
-    width: 90px;
-    height: 90px;
-    background: radial-gradient(circle, yellow, orange);
-    border-radius: 50%;
-    animation: sunMove 8s infinite ease-in-out;
-}
-
-@keyframes sunMove {
-    0% { transform: translate(0,0);}
-    50% { transform: translate(50px,-30px);}
-    100% { transform: translate(0,0);}
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-st.title("🌤 WeatherX")
-
-# ================= FUNCTIONS =================
+# ================= AUTO DETECT =================
 def detect_location():
     try:
-        g = geocoder.ip('me')
-        if g.latlng:
-            lat, lon = g.latlng
-            data = requests.get(
-                f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}"
-            ).json()
+        res = requests.get("https://ipinfo.io/json").json()
+        city = res.get("city", "").lower()
 
-            if data:
-                return data[0]["name"].lower()
+        if city in ["the dalles", "", None]:
+            return "suryapet"
+
+        return city
     except:
-        pass
-    return "suryapet"
+        return "suryapet"
 
+# ================= WEATHER =================
 @st.cache_data(ttl=300)
 def get_weather(city):
     geo = requests.get(
@@ -164,17 +83,76 @@ def get_forecast(city):
         f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
     ).json()
 
+# ================= UI =================
+st.markdown("""
+<style>
+.stApp {
+    background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364);
+    color: white;
+}
+
+.block-container { z-index: 2; position: relative; }
+
+/* Glass */
+.card {
+    background: rgba(255,255,255,0.08);
+    padding: 25px;
+    border-radius: 20px;
+    backdrop-filter: blur(15px);
+}
+
+/* Buttons */
+.stButton button {
+    background: #111 !important;
+    color: white !important;
+    border-radius: 8px;
+}
+
+/* CLOUDS */
+.cloud {
+    position: fixed;
+    width: 140px;
+    height: 60px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 60px;
+    animation: moveClouds 60s linear infinite;
+    z-index: 0;
+}
+
+@keyframes moveClouds {
+    0% { transform: translateX(-200px); }
+    100% { transform: translateX(120vw); }
+}
+
+/* SUN */
+.sun {
+    position: fixed;
+    top: 60px;
+    left: 65%;
+    width: 90px;
+    height: 90px;
+    background: radial-gradient(circle, yellow, orange);
+    border-radius: 50%;
+    animation: sunMove 8s infinite ease-in-out;
+    z-index: 0;
+}
+
+@keyframes sunMove {
+    0% { transform: translate(0,0);}
+    50% { transform: translate(50px,-30px);}
+    100% { transform: translate(0,0);}
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.title("🌤 WeatherX")
+
 # ================= SESSION =================
 if "city" not in st.session_state:
     st.session_state["city"] = detect_location()
 
-if "auto_trigger" not in st.session_state:
-    st.session_state["auto_trigger"] = False
-
-# FIX AUTO DETECT CRASH
-if st.session_state["auto_trigger"]:
-    st.session_state["city"] = detect_location()
-    st.session_state["auto_trigger"] = False
+if "favorites" not in st.session_state:
+    st.session_state["favorites"] = []
 
 # ================= INPUT =================
 col1, col2, col3 = st.columns([3,1,1])
@@ -184,33 +162,31 @@ with col1:
 
 with col2:
     if st.button("📍 Auto Detect"):
-        st.session_state["auto_trigger"] = True
+        st.session_state["city"] = detect_location()
         st.rerun()
 
 with col3:
     get_btn = st.button("🔍 Get Weather")
 
-# 🔥 NORMALIZE CITY (FIX BUG HERE)
-city = normalize_city(st.session_state["city"])
+city = smart_city(st.session_state["city"])
 
 # ================= WEATHER =================
 if get_btn:
-    with st.spinner("Loading..."):
+    with st.spinner("Loading weather..."):
         time.sleep(1)
         data = get_weather(city)
 else:
     data = get_weather(city)
 
 if not data:
-    st.error("❌ Location not found")
+    st.error("❌ City not found")
 else:
     weather = data["weather"][0]["description"]
 
-    # ================= ANIMATION =================
+    # ANIMATION
     if "clear" in weather:
         st.markdown('<div class="sun"></div>', unsafe_allow_html=True)
 
-    # MULTIPLE CLOUD LAYERS (NO STOP EFFECT)
     for i in range(6):
         st.markdown(
             f'<div class="cloud" style="top:{80 + i*70}px; animation-delay:{i*8}s;"></div>',
@@ -224,6 +200,20 @@ else:
 
     lat = data["coord"]["lat"]
     lon = data["coord"]["lon"]
+
+    # FAVORITES
+    col1, col2 = st.columns([3,1])
+
+    with col1:
+        if st.button("⭐ Add to Favorites"):
+            if city not in st.session_state["favorites"]:
+                st.session_state["favorites"].append(city)
+
+    with col2:
+        if st.session_state["favorites"]:
+            selected = st.selectbox("⭐ Favorites", st.session_state["favorites"])
+            st.session_state["city"] = selected
+            st.rerun()
 
     st.markdown('<div class="card">', unsafe_allow_html=True)
 
@@ -243,7 +233,7 @@ else:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ================= FORECAST =================
+    # FORECAST
     st.subheader("📊 5-Day Forecast")
 
     forecast = get_forecast(city)
@@ -257,6 +247,5 @@ else:
             days.append(item["dt_txt"].split()[0])
 
         df_chart = pd.DataFrame({"Day": days, "Temperature": temps})
-
         fig = px.line(df_chart, x="Day", y="Temperature", markers=True)
         st.plotly_chart(fig, use_container_width=True)
