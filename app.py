@@ -65,9 +65,10 @@ if "city" not in st.session_state:
     st.session_state.city = detect_location()
 
 # ================= INPUT =================
-# ================= SESSION INIT =================
+
+# ================= SESSION INIT (TOP BEFORE INPUT) =================
 if "city" not in st.session_state:
-    st.session_state.city = detect_location()
+    st.session_state["city"] = detect_location()
 
 # ================= INPUT =================
 col1, col2 = st.columns([3,1])
@@ -78,11 +79,11 @@ with col1:
 with col2:
     st.write("")
     if st.button("📍 Auto Detect"):
-        st.session_state.city = detect_location()
+        st.session_state["city"] = detect_location()
         st.rerun()
 
-# always use this
-city = st.session_state.city.lower()
+# Always use this value
+city = st.session_state["city"].lower()
 
 # ================= ALIASES =================
 aliases = {
