@@ -3,6 +3,8 @@ import requests
 import pandas as pd
 import plotly.express as px
 import geocoder
+from difflib import get_close_matches
+
 
 API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 
@@ -87,14 +89,44 @@ with col2:
 # always use this
 city = st.session_state["city"].lower()
 # ================= ALIASES =================
-aliases = {
+# ================= SMART CITY SYSTEM =================
+city_alias = {
+    # Telangana
+    "ranga reddy": "hyderabad",
+    "rangareddy": "hyderabad",
+    "medchal": "hyderabad",
+    "sangareddy": "hyderabad",
+    "karimnagar": "karimnagar",
+    "warangal": "warangal",
+    "suryapet": "suryapet",
+
+    # Andhra
+    "east godavari": "rajahmundry",
+    "west godavari": "eluru",
+    "krishna": "vijayawada",
+    "prakasam": "ongole",
+
+    # India common
     "vizag": "visakhapatnam",
+    "vishakapatnam": "visakhapatnam",
     "hyd": "hyderabad",
+    "secunderabad": "hyderabad",
+    "bangalore": "bengaluru",
+    "bombay": "mumbai",
+    "madras": "chennai",
+    "calcutta": "kolkata",
     "delhi": "new delhi"
 }
 
-if city in aliases:
-    city = aliases[city]
+# STEP 1: Direct match
+if city in city_alias:
+    city = city_alias[city]
+
+# STEP 2: Fuzzy match (handles typos)
+else:
+    match = get_close_matches(city, city_alias.keys(), n=1, cutoff=0.7)
+    if match:
+        city = city_alias[match[0]]
 
 # ================= WEATHER =================
 if st.button("Get Weather"):
