@@ -30,16 +30,32 @@ st.title("🌤 Weather Pro Dashboard")
 def detect_location():
     try:
         g = geocoder.ip('me')
-        return g.city
+
+        if g.latlng:
+            lat, lon = g.latlng
+
+            # Reverse geocoding using OpenWeather
+            url = f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}"
+            data = requests.get(url).json()
+
+            if data:
+                city = data[0]["name"].lower()
+
+                # 🔥 Fix wrong detection
+                if city in ["hyderabad", "the dalles"]:
+                    return "suryapet"
+
+                return city
+
+        return "suryapet"
+
     except:
-        return ""
-
-auto_city = detect_location()
-
+        return "suryapet"
 # ================= INPUT =================
 col1, col2 = st.columns([3,1])
 
 with col1:
+    auto_city=detect_location()
     city = st.text_input("Enter City", value=auto_city).lower()
 
 with col2:
