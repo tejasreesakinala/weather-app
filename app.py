@@ -4,13 +4,12 @@ import pandas as pd
 import plotly.express as px
 import geocoder
 import time
-from datetime import datetime
 
 API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 
 st.set_page_config(page_title="WeatherX", layout="wide")
 
-# ================= UI + ANIMATION =================
+# ================= STYLE =================
 st.markdown("""
 <style>
 .stApp {
@@ -18,19 +17,11 @@ st.markdown("""
     color: white;
 }
 
-/* Card */
 .card {
     background: rgba(255,255,255,0.08);
     padding: 25px;
     border-radius: 20px;
     backdrop-filter: blur(15px);
-}
-
-/* Fix line */
-hr {
-    border: none;
-    height: 1px;
-    background: rgba(255,255,255,0.2);
 }
 
 /* SUN */
@@ -105,7 +96,7 @@ hr {
 
 st.title("🌤 WeatherX")
 
-# ================= CACHE =================
+# ================= FUNCTIONS =================
 @st.cache_data(ttl=300)
 def get_weather(city):
     geo = requests.get(
@@ -136,7 +127,6 @@ def get_forecast(city):
         f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
     ).json()
 
-# ================= LOCATION =================
 def detect_location():
     try:
         g = geocoder.ip('me')
@@ -155,32 +145,30 @@ def detect_location():
         pass
     return "suryapet"
 
-# ================= SEARCH =================
-def search_city(query):
-    try:
-        res = requests.get(
-            f"http://api.openweathermap.org/geo/1.0/direct?q={query}&limit=5&appid={API_KEY}"
-        ).json()
-        return [f"{p['name']}, {p['country']}" for p in res]
-    except:
-        return []
-
 # ================= SESSION =================
 if "city" not in st.session_state:
-    st.session_state.city = detect_location()
+    st.session_state["city"] = detect_location()
+
+if "auto_trigger" not in st.session_state:
+    st.session_state["auto_trigger"] = False
 
 if "favorites" not in st.session_state:
-    st.session_state.favorites = []
+    st.session_state["favorites"] = []
 
-# ================= HEADER =================
+# ================= AUTO DETECT HANDLER =================
+if st.session_state["auto_trigger"]:
+    st.session_state["city"] = detect_location()
+    st.session_state["auto_trigger"] = False
+
+# ================= INPUT =================
 col1, col2, col3 = st.columns([3,1,1])
 
 with col1:
-    search = st.text_input("🔍 Search City", key = "city")
+    st.text_input("🔍 Search City", key="city")
 
 with col2:
     if st.button("📍 Auto Detect"):
-        st.session_state["city"] = detect_location()
+        st.session_state["auto_trigger"] = True
         st.rerun()
 
 with col3:
@@ -194,7 +182,7 @@ if get_btn:
         time.sleep(1)
         data = get_weather(city)
 else:
-    data = get_weather(st.session_state.city)
+    data = get_weather(city)
 
 if not data or str(data.get("cod")) != "200":
     st.error("❌ Location not found")
@@ -205,24 +193,15 @@ else:
     if "clear" in weather:
         st.markdown('<div class="sun"></div>', unsafe_allow_html=True)
         for i in range(2):
-            st.markdown(
-                f'<div class="cloud" style="top:{120 + i*80}px; animation-delay:{i*5}s;"></div>',
-                unsafe_allow_html=True
-            )
+            st.markdown(f'<div class="cloud" style="top:{120+i*80}px;"></div>', unsafe_allow_html=True)
 
     elif "cloud" in weather:
         for i in range(3):
-            st.markdown(
-                f'<div class="cloud" style="top:{100 + i*80}px; animation-delay:{i*5}s;"></div>',
-                unsafe_allow_html=True
-            )
+            st.markdown(f'<div class="cloud" style="top:{100+i*80}px;"></div>', unsafe_allow_html=True)
 
     elif "rain" in weather:
-        for i in range(50):
-            st.markdown(
-                f'<div class="rain" style="left:{i*20}px;"></div>',
-                unsafe_allow_html=True
-            )
+        for i in range(40):
+            st.markdown(f'<div class="rain" style="left:{i*25}px;"></div>', unsafe_allow_html=True)
 
     elif "storm" in weather:
         st.markdown('<div class="lightning"></div>', unsafe_allow_html=True)
@@ -240,16 +219,16 @@ else:
 
     with col1:
         if st.button("⭐ Add to Favorites"):
-            if city not in st.session_state.favorites:
-                st.session_state.favorites.append(city)
+            if city not in st.session_state["favorites"]:
+                st.session_state["favorites"].append(city)
 
     with col2:
-        if st.session_state.favorites:
-            selected = st.selectbox("⭐ Favorites", st.session_state.favorites)
-            st.session_state.city = selected
+        if st.session_state["favorites"]:
+            selected = st.selectbox("⭐ Favorites", st.session_state["favorites"])
+            st.session_state["city"] = selected
             st.rerun()
 
-    # ================= MAIN =================
+    # ================= DISPLAY =================
     st.markdown('<div class="card">', unsafe_allow_html=True)
 
     col1, col2 = st.columns([1,1])
@@ -276,7 +255,7 @@ else:
     if forecast and "list" in forecast:
         temps, days = [], []
 
-        for i in range(0, 40, 8):
+        for i in range(0,40,8):
             item = forecast["list"][i]
             temps.append(item["main"]["temp"])
             days.append(item["dt_txt"].split()[0])
