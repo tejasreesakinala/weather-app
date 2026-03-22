@@ -9,7 +9,7 @@ API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 
 st.set_page_config(page_title="WeatherX", layout="wide")
 
-# ================= STYLE =================
+# ================= UI STYLE =================
 st.markdown("""
 <style>
 .stApp {
@@ -17,11 +17,27 @@ st.markdown("""
     color: white;
 }
 
+/* Thin Divider */
+hr {
+    margin-top: 5px !important;
+    margin-bottom: 5px !important;
+    height: 1px !important;
+    background: rgba(255,255,255,0.15) !important;
+    border: none !important;
+}
+
+/* Glass Card */
 .card {
     background: rgba(255,255,255,0.08);
     padding: 25px;
     border-radius: 20px;
     backdrop-filter: blur(15px);
+}
+
+/* Prevent animation overlap */
+.block-container {
+    position: relative;
+    z-index: 1;
 }
 
 /* SUN */
@@ -41,29 +57,43 @@ st.markdown("""
     100% { transform: translateY(0) translateX(0);}
 }
 
-/* CLOUD */
+/* CLOUD (FIXED PREMIUM) */
 .cloud {
     position: absolute;
-    width: 180px;
-    height: 60px;
-    background: white;
+    width: 120px;
+    height: 50px;
+    background: rgba(255,255,255,0.85);
     border-radius: 50px;
-    opacity: 0.7;
-    animation: moveClouds 30s linear infinite;
+    animation: moveClouds 40s linear infinite;
+    z-index: 0;
+    filter: blur(2px);
 }
+
 .cloud::before {
     content:'';
     position:absolute;
-    top:-30px;
-    left:30px;
-    width:100px;
-    height:100px;
-    background:white;
+    top:-20px;
+    left:20px;
+    width:70px;
+    height:70px;
+    background: rgba(255,255,255,0.85);
     border-radius:50%;
 }
+
+.cloud::after {
+    content:'';
+    position:absolute;
+    top:-10px;
+    left:60px;
+    width:50px;
+    height:50px;
+    background: rgba(255,255,255,0.85);
+    border-radius:50%;
+}
+
 @keyframes moveClouds {
-    0% { left: -200px;}
-    100% { left: 110%;}
+    0% { left: -150px; }
+    100% { left: 110%; }
 }
 
 /* RAIN */
@@ -155,7 +185,7 @@ if "auto_trigger" not in st.session_state:
 if "favorites" not in st.session_state:
     st.session_state["favorites"] = []
 
-# ================= AUTO DETECT HANDLER =================
+# ================= AUTO DETECT FIX =================
 if st.session_state["auto_trigger"]:
     st.session_state["city"] = detect_location()
     st.session_state["auto_trigger"] = False
@@ -192,16 +222,25 @@ else:
     # ================= ANIMATION =================
     if "clear" in weather:
         st.markdown('<div class="sun"></div>', unsafe_allow_html=True)
-        for i in range(2):
-            st.markdown(f'<div class="cloud" style="top:{120+i*80}px;"></div>', unsafe_allow_html=True)
+        for i in range(4):
+            st.markdown(
+                f'<div class="cloud" style="top:{80 + i*60}px; animation-delay:{i*6}s;"></div>',
+                unsafe_allow_html=True
+            )
 
     elif "cloud" in weather:
-        for i in range(3):
-            st.markdown(f'<div class="cloud" style="top:{100+i*80}px;"></div>', unsafe_allow_html=True)
+        for i in range(4):
+            st.markdown(
+                f'<div class="cloud" style="top:{80 + i*60}px; animation-delay:{i*6}s;"></div>',
+                unsafe_allow_html=True
+            )
 
     elif "rain" in weather:
         for i in range(40):
-            st.markdown(f'<div class="rain" style="left:{i*25}px;"></div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="rain" style="left:{i*25}px;"></div>',
+                unsafe_allow_html=True
+            )
 
     elif "storm" in weather:
         st.markdown('<div class="lightning"></div>', unsafe_allow_html=True)
@@ -228,7 +267,6 @@ else:
             st.session_state["city"] = selected
             st.rerun()
 
-    # ================= DISPLAY =================
     st.markdown('<div class="card">', unsafe_allow_html=True)
 
     col1, col2 = st.columns([1,1])
