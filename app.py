@@ -176,17 +176,17 @@ if "favorites" not in st.session_state:
 col1, col2, col3 = st.columns([3,1,1])
 
 with col1:
-    search = st.text_input("🔍 Search City", value=st.session_state.city)
+    search = st.text_input("🔍 Search City", key = "city")
 
 with col2:
     if st.button("📍 Auto Detect"):
-        st.session_state.city = detect_location()
+        st.session_state["city"] = detect_location()
         st.rerun()
 
 with col3:
     get_btn = st.button("🔍 Get Weather")
 
-city = search.lower()
+city = st.session_state["city"].lower()
 
 # ================= WEATHER =================
 if get_btn:
