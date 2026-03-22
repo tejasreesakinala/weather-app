@@ -9,85 +9,24 @@ API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 
 st.set_page_config(page_title="WeatherX", layout="wide")
 
-# ================= DYNAMIC BACKGROUND =================
-def get_background_style(weather):
-    weather = weather.lower()
-
-    if "clear" in weather:
-        return """
-        <style>
-        .stApp {
-            background: linear-gradient(-45deg, #fceabb, #f8b500, #ff8008, #ffc837);
-            background-size: 400% 400%;
-            animation: gradient 10s ease infinite;
-            color: black;
-        }
-        </style>
-        """
-
-    elif "cloud" in weather:
-        return """
-        <style>
-        .stApp {
-            background: linear-gradient(-45deg, #bdc3c7, #2c3e50, #95a5a6, #7f8c8d);
-            background-size: 400% 400%;
-            animation: gradient 12s ease infinite;
-        }
-        </style>
-        """
-
-    elif "rain" in weather:
-        return """
-        <style>
-        .stApp {
-            background: linear-gradient(-45deg, #000428, #004e92, #2c3e50, #1a2980);
-            background-size: 400% 400%;
-            animation: gradient 8s ease infinite;
-        }
-        </style>
-        """
-
-    elif "storm" in weather:
-        return """
-        <style>
-        .stApp {
-            background: linear-gradient(-45deg, #232526, #414345, #000000, #434343);
-            background-size: 400% 400%;
-            animation: gradient 5s ease infinite;
-        }
-        </style>
-        """
-
-    else:
-        return """
-        <style>
-        .stApp {
-            background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364);
-            background-size: 400% 400%;
-            animation: gradient 12s ease infinite;
-        }
-        </style>
-        """
-
-# ================= GLOBAL STYLE =================
+# ================= UI STYLE =================
 st.markdown("""
 <style>
-
-@keyframes gradient {
-    0% {background-position: 0% 50%;}
-    50% {background-position: 100% 50%;}
-    100% {background-position: 0% 50%;}
+.stApp {
+    background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364);
+    color: white;
 }
 
 /* Thin Divider */
 hr {
-    margin: 5px 0 !important;
+    margin-top: 5px !important;
+    margin-bottom: 5px !important;
     height: 1px !important;
-    background: rgba(255,255,255,0.2);
-    border: none;
+    background: rgba(255,255,255,0.15) !important;
+    border: none !important;
 }
 
-/* Glass UI */
+/* Glass Card */
 .card {
     background: rgba(255,255,255,0.08);
     padding: 25px;
@@ -95,7 +34,7 @@ hr {
     backdrop-filter: blur(15px);
 }
 
-/* Fix layering */
+/* Prevent animation overlap */
 .block-container {
     position: relative;
     z-index: 1;
@@ -112,14 +51,13 @@ hr {
     border-radius: 50%;
     animation: sunMove 10s infinite ease-in-out;
 }
-
 @keyframes sunMove {
-    0% {transform: translateY(0);}
-    50% {transform: translateY(-25px);}
-    100% {transform: translateY(0);}
+    0% { transform: translateY(0) translateX(0);}
+    50% { transform: translateY(-25px) translateX(20px);}
+    100% { transform: translateY(0) translateX(0);}
 }
 
-/* CLOUD */
+/* CLOUD (FIXED PREMIUM) */
 .cloud {
     position: absolute;
     width: 120px;
@@ -127,6 +65,7 @@ hr {
     background: rgba(255,255,255,0.85);
     border-radius: 50px;
     animation: moveClouds 40s linear infinite;
+    z-index: 0;
     filter: blur(2px);
 }
 
@@ -137,7 +76,7 @@ hr {
     left:20px;
     width:70px;
     height:70px;
-    background:white;
+    background: rgba(255,255,255,0.85);
     border-radius:50%;
 }
 
@@ -148,7 +87,7 @@ hr {
     left:60px;
     width:50px;
     height:50px;
-    background:white;
+    background: rgba(255,255,255,0.85);
     border-radius:50%;
 }
 
@@ -165,10 +104,9 @@ hr {
     background:lightblue;
     animation: rainFall 0.5s linear infinite;
 }
-
 @keyframes rainFall {
-    0% {transform: translateY(0);}
-    100% {transform: translateY(600px);}
+    0% { transform: translateY(0);}
+    100% { transform: translateY(600px);}
 }
 
 /* LIGHTNING */
@@ -178,13 +116,11 @@ hr {
     height:100%;
     animation: lightning 4s infinite;
 }
-
 @keyframes lightning {
     0% {background:transparent;}
     50% {background:white;}
     100% {background:transparent;}
 }
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -249,7 +185,7 @@ if "auto_trigger" not in st.session_state:
 if "favorites" not in st.session_state:
     st.session_state["favorites"] = []
 
-# ================= AUTO DETECT =================
+# ================= AUTO DETECT FIX =================
 if st.session_state["auto_trigger"]:
     st.session_state["city"] = detect_location()
     st.session_state["auto_trigger"] = False
@@ -283,27 +219,30 @@ if not data or str(data.get("cod")) != "200":
 else:
     weather = data["weather"][0]["description"]
 
-    # 🎨 APPLY BACKGROUND
-    st.markdown(get_background_style(weather), unsafe_allow_html=True)
-
-    # 🎬 ANIMATION
+    # ================= ANIMATION =================
     if "clear" in weather:
         st.markdown('<div class="sun"></div>', unsafe_allow_html=True)
-
-    for i in range(4):
-        st.markdown(
-            f'<div class="cloud" style="top:{80 + i*60}px; animation-delay:{i*6}s;"></div>',
-            unsafe_allow_html=True
-        )
-
-    if "rain" in weather:
-        for i in range(30):
+        for i in range(4):
             st.markdown(
-                f'<div class="rain" style="left:{i*30}px;"></div>',
+                f'<div class="cloud" style="top:{80 + i*60}px; animation-delay:{i*6}s;"></div>',
                 unsafe_allow_html=True
             )
 
-    if "storm" in weather:
+    elif "cloud" in weather:
+        for i in range(4):
+            st.markdown(
+                f'<div class="cloud" style="top:{80 + i*60}px; animation-delay:{i*6}s;"></div>',
+                unsafe_allow_html=True
+            )
+
+    elif "rain" in weather:
+        for i in range(40):
+            st.markdown(
+                f'<div class="rain" style="left:{i*25}px;"></div>',
+                unsafe_allow_html=True
+            )
+
+    elif "storm" in weather:
         st.markdown('<div class="lightning"></div>', unsafe_allow_html=True)
 
     temp = data["main"]["temp"]
