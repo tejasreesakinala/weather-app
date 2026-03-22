@@ -2,195 +2,57 @@ import streamlit as st
 import requests
 import pandas as pd
 import plotly.express as px
-import geocoder
 import time
+from difflib import get_close_matches
 
 API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 
 st.set_page_config(page_title="WeatherX", layout="wide")
 
-# ================= DYNAMIC BACKGROUND =================
-def get_background_style(weather):
-    weather = weather.lower()
+# ================= SMART SEARCH =================
+city_alias = {
+    "ranga reddy": "hyderabad",
+    "rangareddy": "hyderabad",
+    "medchal": "hyderabad",
+    "sangareddy": "hyderabad",
 
-    if "clear" in weather:
-        return """
-        <style>
-        .stApp {
-            background: linear-gradient(-45deg, #fceabb, #f8b500, #ff8008, #ffc837);
-            background-size: 400% 400%;
-            animation: gradient 10s ease infinite;
-            color: black;
-        }
-        </style>
-        """
+    "vizag": "visakhapatnam",
+    "vishakapatnam": "visakhapatnam",
+    "hyd": "hyderabad",
+    "secunderabad": "hyderabad",
 
-    elif "cloud" in weather:
-        return """
-        <style>
-        .stApp {
-            background: linear-gradient(-45deg, #bdc3c7, #2c3e50, #95a5a6, #7f8c8d);
-            background-size: 400% 400%;
-            animation: gradient 12s ease infinite;
-        }
-        </style>
-        """
-
-    elif "rain" in weather:
-        return """
-        <style>
-        .stApp {
-            background: linear-gradient(-45deg, #000428, #004e92, #2c3e50, #1a2980);
-            background-size: 400% 400%;
-            animation: gradient 8s ease infinite;
-        }
-        </style>
-        """
-
-    elif "storm" in weather:
-        return """
-        <style>
-        .stApp {
-            background: linear-gradient(-45deg, #232526, #414345, #000000, #434343);
-            background-size: 400% 400%;
-            animation: gradient 5s ease infinite;
-        }
-        </style>
-        """
-
-    else:
-        return """
-        <style>
-        .stApp {
-            background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364);
-            background-size: 400% 400%;
-            animation: gradient 12s ease infinite;
-        }
-        </style>
-        """
-
-# ================= GLOBAL STYLE =================
-st.markdown("""
-<style>
-
-@keyframes gradient {
-    0% {background-position: 0% 50%;}
-    50% {background-position: 100% 50%;}
-    100% {background-position: 0% 50%;}
+    "bombay": "mumbai",
+    "madras": "chennai",
+    "calcutta": "kolkata",
+    "delhi": "new delhi"
 }
 
-/* Thin Divider */
-hr {
-    margin: 5px 0 !important;
-    height: 1px !important;
-    background: rgba(255,255,255,0.2);
-    border: none;
-}
+def smart_city(city):
+    city = city.lower()
 
-/* Glass UI */
-.card {
-    background: rgba(255,255,255,0.08);
-    padding: 25px;
-    border-radius: 20px;
-    backdrop-filter: blur(15px);
-}
+    if city in city_alias:
+        return city_alias[city]
 
-/* Fix layering */
-.block-container {
-    position: relative;
-    z-index: 1;
-}
+    match = get_close_matches(city, city_alias.keys(), n=1, cutoff=0.7)
+    if match:
+        return city_alias[match[0]]
 
-/* SUN */
-.sun {
-    position: absolute;
-    top: 60px;
-    left: 70%;
-    width: 90px;
-    height: 90px;
-    background: radial-gradient(circle, yellow, orange);
-    border-radius: 50%;
-    animation: sunMove 10s infinite ease-in-out;
-}
+    return city
 
-@keyframes sunMove {
-    0% {transform: translateY(0);}
-    50% {transform: translateY(-25px);}
-    100% {transform: translateY(0);}
-}
+# ================= AUTO DETECT =================
+def detect_location():
+    try:
+        res = requests.get("https://ipinfo.io/json").json()
+        city = res.get("city", "").lower()
 
-/* CLOUD */
-.cloud {
-    position: absolute;
-    width: 120px;
-    height: 50px;
-    background: rgba(255,255,255,0.85);
-    border-radius: 50px;
-    animation: moveClouds 40s linear infinite;
-    filter: blur(2px);
-}
+        if city in ["the dalles", "", None]:
+            return "suryapet"
 
-.cloud::before {
-    content:'';
-    position:absolute;
-    top:-20px;
-    left:20px;
-    width:70px;
-    height:70px;
-    background:white;
-    border-radius:50%;
-}
+        return city
+    except:
+        return "suryapet"
 
-.cloud::after {
-    content:'';
-    position:absolute;
-    top:-10px;
-    left:60px;
-    width:50px;
-    height:50px;
-    background:white;
-    border-radius:50%;
-}
-
-@keyframes moveClouds {
-    0% { left: -150px; }
-    100% { left: 110%; }
-}
-
-/* RAIN */
-.rain {
-    position:absolute;
-    width:2px;
-    height:20px;
-    background:lightblue;
-    animation: rainFall 0.5s linear infinite;
-}
-
-@keyframes rainFall {
-    0% {transform: translateY(0);}
-    100% {transform: translateY(600px);}
-}
-
-/* LIGHTNING */
-.lightning {
-    position:absolute;
-    width:100%;
-    height:100%;
-    animation: lightning 4s infinite;
-}
-
-@keyframes lightning {
-    0% {background:transparent;}
-    50% {background:white;}
-    100% {background:transparent;}
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-st.title("🌤 WeatherX")
-
-# ================= FUNCTIONS =================
+# ================= WEATHER =================
 @st.cache_data(ttl=300)
 def get_weather(city):
     geo = requests.get(
@@ -221,38 +83,76 @@ def get_forecast(city):
         f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
     ).json()
 
-def detect_location():
-    try:
-        g = geocoder.ip('me')
-        if g.latlng:
-            lat, lon = g.latlng
-            data = requests.get(
-                f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}"
-            ).json()
+# ================= UI =================
+st.markdown("""
+<style>
+.stApp {
+    background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364);
+    color: white;
+}
 
-            if data:
-                city = data[0]["name"].lower()
-                if city in ["hyderabad", "the dalles", ""]:
-                    return "suryapet"
-                return city
-    except:
-        pass
-    return "suryapet"
+.block-container { z-index: 2; position: relative; }
+
+/* Glass */
+.card {
+    background: rgba(255,255,255,0.08);
+    padding: 25px;
+    border-radius: 20px;
+    backdrop-filter: blur(15px);
+}
+
+/* Buttons */
+.stButton button {
+    background: #111 !important;
+    color: white !important;
+    border-radius: 8px;
+}
+
+/* CLOUDS */
+.cloud {
+    position: fixed;
+    width: 140px;
+    height: 60px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 60px;
+    animation: moveClouds 60s linear infinite;
+    z-index: 0;
+}
+
+@keyframes moveClouds {
+    0% { transform: translateX(-200px); }
+    100% { transform: translateX(120vw); }
+}
+
+/* SUN */
+.sun {
+    position: fixed;
+    top: 60px;
+    left: 65%;
+    width: 90px;
+    height: 90px;
+    background: radial-gradient(circle, yellow, orange);
+    border-radius: 50%;
+    animation: sunMove 8s infinite ease-in-out;
+    z-index: 0;
+}
+
+@keyframes sunMove {
+    0% { transform: translate(0,0);}
+    50% { transform: translate(50px,-30px);}
+    100% { transform: translate(0,0);}
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.title("🌤 WeatherX")
 
 # ================= SESSION =================
 if "city" not in st.session_state:
     st.session_state["city"] = detect_location()
 
-if "auto_trigger" not in st.session_state:
-    st.session_state["auto_trigger"] = False
-
 if "favorites" not in st.session_state:
     st.session_state["favorites"] = []
-
-# ================= AUTO DETECT =================
-if st.session_state["auto_trigger"]:
-    st.session_state["city"] = detect_location()
-    st.session_state["auto_trigger"] = False
 
 # ================= INPUT =================
 col1, col2, col3 = st.columns([3,1,1])
@@ -262,13 +162,13 @@ with col1:
 
 with col2:
     if st.button("📍 Auto Detect"):
-        st.session_state["auto_trigger"] = True
+        st.session_state["city"] = detect_location()
         st.rerun()
 
 with col3:
     get_btn = st.button("🔍 Get Weather")
 
-city = st.session_state["city"].lower()
+city = smart_city(st.session_state["city"])
 
 # ================= WEATHER =================
 if get_btn:
@@ -278,33 +178,20 @@ if get_btn:
 else:
     data = get_weather(city)
 
-if not data or str(data.get("cod")) != "200":
-    st.error("❌ Location not found")
+if not data:
+    st.error("❌ City not found")
 else:
     weather = data["weather"][0]["description"]
 
-    # 🎨 APPLY BACKGROUND
-    st.markdown(get_background_style(weather), unsafe_allow_html=True)
-
-    # 🎬 ANIMATION
+    # ANIMATION
     if "clear" in weather:
         st.markdown('<div class="sun"></div>', unsafe_allow_html=True)
 
-    for i in range(4):
+    for i in range(6):
         st.markdown(
-            f'<div class="cloud" style="top:{80 + i*60}px; animation-delay:{i*6}s;"></div>',
+            f'<div class="cloud" style="top:{80 + i*70}px; animation-delay:{i*8}s;"></div>',
             unsafe_allow_html=True
         )
-
-    if "rain" in weather:
-        for i in range(30):
-            st.markdown(
-                f'<div class="rain" style="left:{i*30}px;"></div>',
-                unsafe_allow_html=True
-            )
-
-    if "storm" in weather:
-        st.markdown('<div class="lightning"></div>', unsafe_allow_html=True)
 
     temp = data["main"]["temp"]
     feels = data["main"]["feels_like"]
@@ -314,7 +201,7 @@ else:
     lat = data["coord"]["lat"]
     lon = data["coord"]["lon"]
 
-    # ================= FAVORITES =================
+    # FAVORITES
     col1, col2 = st.columns([3,1])
 
     with col1:
@@ -346,12 +233,12 @@ else:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ================= FORECAST =================
+    # FORECAST
     st.subheader("📊 5-Day Forecast")
 
     forecast = get_forecast(city)
 
-    if forecast and "list" in forecast:
+    if forecast:
         temps, days = [], []
 
         for i in range(0,40,8):
@@ -359,10 +246,6 @@ else:
             temps.append(item["main"]["temp"])
             days.append(item["dt_txt"].split()[0])
 
-        df_chart = pd.DataFrame({
-            "Day": days,
-            "Temperature": temps
-        })
-
+        df_chart = pd.DataFrame({"Day": days, "Temperature": temps})
         fig = px.line(df_chart, x="Day", y="Temperature", markers=True)
         st.plotly_chart(fig, use_container_width=True)
