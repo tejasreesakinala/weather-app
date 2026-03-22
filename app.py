@@ -10,7 +10,7 @@ API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 
 st.set_page_config(page_title="WeatherX", layout="wide")
 
-# ================= STYLE + ANIMATION =================
+# ================= UI + ANIMATION =================
 st.markdown("""
 <style>
 .stApp {
@@ -18,42 +18,47 @@ st.markdown("""
     color: white;
 }
 
-/* Glass card */
+/* Card */
 .card {
     background: rgba(255,255,255,0.08);
     padding: 25px;
     border-radius: 20px;
     backdrop-filter: blur(15px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
-/* Sun */
+/* Fix line */
+hr {
+    border: none;
+    height: 1px;
+    background: rgba(255,255,255,0.2);
+}
+
+/* SUN */
 .sun {
     position: absolute;
     top: 60px;
-    left: 80%;
-    width: 80px;
-    height: 80px;
+    left: 70%;
+    width: 90px;
+    height: 90px;
     background: radial-gradient(circle, yellow, orange);
     border-radius: 50%;
-    animation: floatSun 6s infinite ease-in-out;
+    animation: sunMove 10s infinite ease-in-out;
 }
-@keyframes floatSun {
-    0% { transform: translateY(0);}
-    50% { transform: translateY(-20px);}
-    100% { transform: translateY(0);}
+@keyframes sunMove {
+    0% { transform: translateY(0) translateX(0);}
+    50% { transform: translateY(-25px) translateX(20px);}
+    100% { transform: translateY(0) translateX(0);}
 }
 
-/* Clouds */
+/* CLOUD */
 .cloud {
     position: absolute;
-    top: 120px;
-    width: 200px;
+    width: 180px;
     height: 60px;
     background: white;
     border-radius: 50px;
     opacity: 0.7;
-    animation: moveClouds 25s linear infinite;
+    animation: moveClouds 30s linear infinite;
 }
 .cloud::before {
     content:'';
@@ -70,7 +75,7 @@ st.markdown("""
     100% { left: 110%;}
 }
 
-/* Rain */
+/* RAIN */
 .rain {
     position:absolute;
     width:2px;
@@ -83,7 +88,7 @@ st.markdown("""
     100% { transform: translateY(600px);}
 }
 
-/* Lightning */
+/* LIGHTNING */
 .lightning {
     position:absolute;
     width:100%;
@@ -99,15 +104,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("🌤 WeatherX")
-
-# ================= NIGHT MODE =================
-hour = datetime.now().hour
-if hour >= 18 or hour <= 6:
-    st.markdown("""
-    <style>
-    .stApp {background: linear-gradient(to right, #000000, #0f2027);}
-    </style>
-    """, unsafe_allow_html=True)
 
 # ================= CACHE =================
 @st.cache_data(ttl=300)
@@ -182,39 +178,23 @@ col1, col2, col3 = st.columns([3,1,1])
 with col1:
     search = st.text_input("🔍 Search City", value=st.session_state.city)
 
-    city = ""
-
-    if search:
-        suggestions = search_city(search)
-
-        if suggestions:
-            if len(suggestions) == 1:
-                city = suggestions[0].split(",")[0].lower()
-            else:
-                selected = st.selectbox("Suggestions", suggestions)
-                city = selected.split(",")[0].lower()
-        else:
-            city = search.lower()
-
 with col2:
-    if st.button("📍 Detect"):
+    if st.button("📍 Auto Detect"):
         st.session_state.city = detect_location()
         st.rerun()
 
 with col3:
-    if st.button("🔄 Refresh"):
-        st.cache_data.clear()
-        st.rerun()
+    get_btn = st.button("🔍 Get Weather")
 
-if city:
-    st.session_state.city = city
-
-city = st.session_state.city
+city = search.lower()
 
 # ================= WEATHER =================
-with st.spinner("Loading weather..."):
-    time.sleep(1)
-    data = get_weather(city)
+if get_btn:
+    with st.spinner("Loading weather..."):
+        time.sleep(1)
+        data = get_weather(city)
+else:
+    data = get_weather(st.session_state.city)
 
 if not data or str(data.get("cod")) != "200":
     st.error("❌ Location not found")
@@ -224,14 +204,21 @@ else:
     # ================= ANIMATION =================
     if "clear" in weather:
         st.markdown('<div class="sun"></div>', unsafe_allow_html=True)
-        st.markdown('<div class="cloud"></div>', unsafe_allow_html=True)
+        for i in range(2):
+            st.markdown(
+                f'<div class="cloud" style="top:{120 + i*80}px; animation-delay:{i*5}s;"></div>',
+                unsafe_allow_html=True
+            )
 
     elif "cloud" in weather:
-        st.markdown('<div class="cloud"></div>', unsafe_allow_html=True)
-        st.markdown('<div class="cloud" style="top:200px;"></div>', unsafe_allow_html=True)
+        for i in range(3):
+            st.markdown(
+                f'<div class="cloud" style="top:{100 + i*80}px; animation-delay:{i*5}s;"></div>',
+                unsafe_allow_html=True
+            )
 
     elif "rain" in weather:
-        for i in range(40):
+        for i in range(50):
             st.markdown(
                 f'<div class="rain" style="left:{i*20}px;"></div>',
                 unsafe_allow_html=True
