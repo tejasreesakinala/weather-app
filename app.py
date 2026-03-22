@@ -64,6 +64,14 @@ def detect_location():
 if "city" not in st.session_state:
     st.session_state["city"] = detect_location()
 
+if "auto_detect" not in st.session_state:
+    st.session_state["auto_detect"] = False
+
+# ================= HANDLE AUTO DETECT (BEFORE INPUT) =================
+if st.session_state["auto_detect"]:
+    st.session_state["city"] = detect_location()
+    st.session_state["auto_detect"] = False
+
 # ================= INPUT =================
 col1, col2 = st.columns([3,1])
 
@@ -76,13 +84,8 @@ with col2:
         st.session_state["auto_detect"] = True
         st.rerun()
 
-# Handle auto detect safely
-if st.session_state.get("auto_detect"):
-    st.session_state["city"] = detect_location()
-    st.session_state["auto_detect"] = False
 # always use this
 city = st.session_state["city"].lower()
-
 # ================= ALIASES =================
 aliases = {
     "vizag": "visakhapatnam",
