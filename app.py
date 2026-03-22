@@ -3,22 +3,48 @@ import requests
 import pandas as pd
 import plotly.express as px
 import geocoder
-from datetime import datetime
+import time
 
-API_KEY = "YOUR_API_KEY"
+API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 
 st.set_page_config(page_title="WeatherX", layout="wide")
 
 # ================= CACHE =================
 @st.cache_data(ttl=300)
-def get_weather(city):
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
-    return requests.get(url).json()
+def get_weather_by_coords(city):
+    try:
+        geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={city}&limit=1&appid={API_KEY}"
+        geo = requests.get(geo_url).json()
+
+        if not geo:
+            return None
+
+        lat = geo[0]["lat"]
+        lon = geo[0]["lon"]
+
+        weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
+        weather = requests.get(weather_url).json()
+
+        return weather
+
+    except:
+        return None
+
 
 @st.cache_data(ttl=300)
-def get_forecast(city):
-    url = f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={API_KEY}&units=metric"
+def get_forecast_by_coords(city):
+    geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={city}&limit=1&appid={API_KEY}"
+    geo = requests.get(geo_url).json()
+
+    if not geo:
+        return None
+
+    lat = geo[0]["lat"]
+    lon = geo[0]["lon"]
+
+    url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
     return requests.get(url).json()
+
 
 # ================= LOCATION =================
 def detect_location():
@@ -26,13 +52,33 @@ def detect_location():
         g = geocoder.ip('me')
         if g.latlng:
             lat, lon = g.latlng
+
             url = f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}"
             data = requests.get(url).json()
+
             if data:
-                return data[0]["name"].lower()
+                city = data[0]["name"].lower()
+
+                # fallback fix
+                if city in ["hyderabad", "the dalles", ""]:
+                    return "suryapet"
+
+                return city
     except:
         pass
+
     return "suryapet"
+
+
+# ================= SEARCH =================
+def search_city(query):
+    try:
+        url = f"http://api.openweathermap.org/geo/1.0/direct?q={query}&limit=5&appid={API_KEY}"
+        res = requests.get(url).json()
+        return [f"{p['name']}, {p['country']}" for p in res]
+    except:
+        return []
+
 
 # ================= SESSION =================
 if "city" not in st.session_state:
@@ -41,28 +87,21 @@ if "city" not in st.session_state:
 if "favorites" not in st.session_state:
     st.session_state.favorites = []
 
-# ================= THEME (DAY/NIGHT) =================
-hour = datetime.now().hour
-if hour >= 18 or hour <= 6:
-    bg = "#0f2027"
-else:
-    bg = "#1c92d2"
 
 # ================= UI =================
-st.markdown(f"""
+st.markdown("""
 <style>
-.stApp {{
-    background: linear-gradient(135deg, {bg}, #203a43);
+.stApp {
+    background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364);
     color: white;
-}}
-
-.card {{
+}
+.card {
     background: rgba(255,255,255,0.08);
     padding: 25px;
     border-radius: 20px;
     backdrop-filter: blur(15px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-}}
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -72,10 +111,21 @@ st.title("🌤 WeatherX")
 col1, col2, col3 = st.columns([3,1,1])
 
 with col1:
-    city_input = st.text_input("🔍 Search city", value=st.session_state.city)
+    search = st.text_input("🔍 Search City", value=st.session_state.city)
 
-    if city_input:
-        st.session_state.city = city_input.lower()
+    city = ""
+
+    if search:
+        suggestions = search_city(search)
+
+        if suggestions:
+            if len(suggestions) == 1:
+                city = suggestions[0].split(",")[0].lower()
+            else:
+                selected = st.selectbox("Suggestions", suggestions)
+                city = selected.split(",")[0].lower()
+        else:
+            city = search.lower()
 
 with col2:
     if st.button("📍 Detect"):
@@ -87,19 +137,24 @@ with col3:
         st.cache_data.clear()
         st.rerun()
 
+if city:
+    st.session_state.city = city
+
 city = st.session_state.city
 
 # ================= WEATHER =================
-data = get_weather(city)
+with st.spinner("Loading weather..."):
+    time.sleep(0.5)
+    data = get_weather_by_coords(city)
 
-if str(data.get("cod")) != "200":
-    st.error("City not found")
+if not data or str(data.get("cod")) != "200":
+    st.error("❌ Location not found")
 else:
     temp = data["main"]["temp"]
-    weather = data["weather"][0]["description"]
+    feels = data["main"]["feels_like"]
     humidity = data["main"]["humidity"]
     wind = data["wind"]["speed"]
-    feels = data["main"]["feels_like"]
+    weather = data["weather"][0]["description"]
 
     lat = data["coord"]["lat"]
     lon = data["coord"]["lon"]
@@ -116,6 +171,7 @@ else:
         if st.session_state.favorites:
             selected = st.selectbox("⭐ Favorites", st.session_state.favorites)
             st.session_state.city = selected
+            st.rerun()
 
     # ================= MAIN =================
     st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -124,7 +180,7 @@ else:
 
     with col1:
         st.success(f"📍 {city.title()}")
-        st.markdown(f"# {temp}°C")
+        st.markdown(f"# 🌡 {temp}°C")
         st.write(weather.title())
         st.metric("Feels Like", f"{feels}°C")
         st.metric("Humidity", f"{humidity}%")
@@ -139,17 +195,21 @@ else:
     # ================= FORECAST =================
     st.subheader("📊 5-Day Forecast")
 
-    forecast = get_forecast(city)
+    forecast = get_forecast_by_coords(city)
 
-    temps = []
-    days = []
+    if forecast and "list" in forecast:
+        temps = []
+        days = []
 
-    for i in range(0,40,8):
-        item = forecast["list"][i]
-        temps.append(item["main"]["temp"])
-        days.append(item["dt_txt"].split()[0])
+        for i in range(0, 40, 8):
+            item = forecast["list"][i]
+            temps.append(item["main"]["temp"])
+            days.append(item["dt_txt"].split()[0])
 
-    df_chart = pd.DataFrame({"Day": days, "Temp": temps})
+        df_chart = pd.DataFrame({
+            "Day": days,
+            "Temperature": temps
+        })
 
-    fig = px.line(df_chart, x="Day", y="Temp", markers=True)
-    st.plotly_chart(fig, use_container_width=True)
+        fig = px.line(df_chart, x="Day", y="Temperature", markers=True)
+        st.plotly_chart(fig, use_container_width=True)
