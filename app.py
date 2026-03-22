@@ -73,9 +73,13 @@ with col1:
 with col2:
     st.write("")
     if st.button("📍 Auto Detect"):
-        st.session_state["city"] = detect_location()
+        st.session_state["auto_detect"] = True
         st.rerun()
 
+# Handle auto detect safely
+if st.session_state.get("auto_detect"):
+    st.session_state["city"] = detect_location()
+    st.session_state["auto_detect"] = False
 # always use this
 city = st.session_state["city"].lower()
 
