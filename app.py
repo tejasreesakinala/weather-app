@@ -8,7 +8,7 @@ API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 
 st.set_page_config(page_title="Weather Pro", layout="wide")
 
-# ================= BACKGROUND ANIMATION =================
+# ================= BACKGROUND =================
 st.markdown("""
 <style>
 .stApp {
@@ -60,13 +60,7 @@ def detect_location():
     except:
         return "suryapet"
 
-# ================= SESSION STATE =================
-if "city" not in st.session_state:
-    st.session_state.city = detect_location()
-
-# ================= INPUT =================
-
-# ================= SESSION INIT (TOP BEFORE INPUT) =================
+# ================= SESSION INIT =================
 if "city" not in st.session_state:
     st.session_state["city"] = detect_location()
 
@@ -82,7 +76,7 @@ with col2:
         st.session_state["city"] = detect_location()
         st.rerun()
 
-# Always use this value
+# always use this
 city = st.session_state["city"].lower()
 
 # ================= ALIASES =================
