@@ -17,25 +17,10 @@ def get_background_style(weather):
         return """
         <style>
         .stApp {
-            background: linear-gradient(-45deg, #ffb347, #ffcc33, #ff9a00, #ffb347);
+            background: linear-gradient(-45deg, #ffb347, #ffcc33, #ff8c00, #ffb347);
             background-size: 400% 400%;
-            animation: gradient 10s ease infinite;
-            color: #1a1a1a;
-        }
-
-        h1, h2, h3, p, label {
-            color: #1a1a1a !important;
-        }
-
-        .stTextInput input {
-            background: rgba(0,0,0,0.7);
-            color: white;
-        }
-
-        .stButton button {
-            background: black;
-            color: white;
-            border-radius: 10px;
+            animation: gradient 12s ease infinite;
+            color: #111;
         }
         </style>
         """
@@ -44,9 +29,9 @@ def get_background_style(weather):
         return """
         <style>
         .stApp {
-            background: linear-gradient(-45deg, #bdc3c7, #2c3e50);
+            background: linear-gradient(-45deg, #757f9a, #d7dde8);
             background-size: 400% 400%;
-            animation: gradient 12s ease infinite;
+            animation: gradient 15s ease infinite;
         }
         </style>
         """
@@ -73,7 +58,7 @@ def get_background_style(weather):
         </style>
         """
 
-# ================= GLOBAL STYLE =================
+# ================= STYLE =================
 st.markdown("""
 <style>
 
@@ -83,60 +68,55 @@ st.markdown("""
     100% {background-position: 0% 50%;}
 }
 
-/* Clean divider */
-hr {
-    margin: 5px 0;
-    height: 1px;
-    background: rgba(255,255,255,0.2);
-    border: none;
+/* Buttons fix */
+.stButton button {
+    background: #111 !important;
+    color: white !important;
+    border-radius: 8px;
+    padding: 6px 12px;
 }
 
-/* Remove empty space */
-div[data-testid="stVerticalBlock"] > div:empty {
-    display: none;
+/* Input */
+.stTextInput input {
+    background: rgba(0,0,0,0.7);
+    color: white;
 }
 
-/* Glass card */
+/* Card */
 .card {
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.1);
     padding: 25px;
     border-radius: 20px;
-    backdrop-filter: blur(15px);
+    backdrop-filter: blur(12px);
     box-shadow: 0 8px 30px rgba(0,0,0,0.3);
 }
 
-/* Layer fix */
-.block-container {
-    position: relative;
-    z-index: 1;
-}
-
-/* SUN */
+/* SUN (more movement) */
 .sun {
     position: absolute;
     top: 60px;
-    left: 70%;
+    left: 65%;
     width: 90px;
     height: 90px;
     background: radial-gradient(circle, yellow, orange);
     border-radius: 50%;
-    animation: sunMove 8s infinite ease-in-out;
+    animation: sunMove 6s infinite ease-in-out;
 }
 
 @keyframes sunMove {
-    0% {transform: translateY(0);}
-    50% {transform: translateY(-20px);}
-    100% {transform: translateY(0);}
+    0% {transform: translate(0,0);}
+    50% {transform: translate(40px,-30px);}
+    100% {transform: translate(0,0);}
 }
 
-/* CLOUD */
+/* CLOUD (smooth) */
 .cloud {
     position: absolute;
     width: 120px;
     height: 50px;
     background: rgba(255,255,255,0.9);
     border-radius: 50px;
-    animation: moveClouds 45s linear infinite;
+    animation: moveClouds 60s linear infinite;
     opacity: 0.9;
 }
 
@@ -163,7 +143,7 @@ div[data-testid="stVerticalBlock"] > div:empty {
 }
 
 @keyframes moveClouds {
-    0% { left: -200px; }
+    0% { left: -250px; }
     100% { left: 110%; }
 }
 
@@ -218,7 +198,7 @@ def get_forecast(city):
 
 # ================= SESSION =================
 if "city" not in st.session_state:
-    st.session_state.city = detect_location()
+    st.session_state["city"] = "suryapet"
 
 # ================= INPUT =================
 col1, col2, col3 = st.columns([3,1,1])
@@ -228,17 +208,18 @@ with col1:
 
 with col2:
     if st.button("📍 Auto Detect"):
-        st.session_state.city = detect_location()
+        detected = detect_location()
+        st.session_state["city"] = detected
         st.rerun()
 
 with col3:
     get_btn = st.button("🔍 Get Weather")
 
-city = st.session_state.city.lower()
+city = st.session_state["city"].lower()
 
 # ================= WEATHER =================
 if get_btn:
-    with st.spinner("Loading weather..."):
+    with st.spinner("Loading..."):
         time.sleep(1)
         data = get_weather(city)
 else:
@@ -248,15 +229,16 @@ if not data:
     st.error("❌ City not found")
 else:
     weather = data["weather"][0]["description"]
+
     st.markdown(get_background_style(weather), unsafe_allow_html=True)
 
     # ANIMATION
     if "clear" in weather:
         st.markdown('<div class="sun"></div>', unsafe_allow_html=True)
 
-    for i in range(4):
+    for i in range(5):
         st.markdown(
-            f'<div class="cloud" style="top:{120 + i*70}px; animation-delay:{i*5}s;"></div>',
+            f'<div class="cloud" style="top:{100 + i*60}px; animation-delay:{i*4}s;"></div>',
             unsafe_allow_html=True
         )
 
@@ -288,6 +270,7 @@ else:
 
     # FORECAST
     st.subheader("📊 5-Day Forecast")
+
     forecast = get_forecast(city)
 
     if forecast:
