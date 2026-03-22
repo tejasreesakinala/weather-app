@@ -4,97 +4,21 @@ import pandas as pd
 import plotly.express as px
 import geocoder
 import time
+from datetime import datetime
 
 API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 
 st.set_page_config(page_title="WeatherX", layout="wide")
 
-# ================= CACHE =================
-@st.cache_data(ttl=300)
-def get_weather_by_coords(city):
-    try:
-        geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={city}&limit=1&appid={API_KEY}"
-        geo = requests.get(geo_url).json()
-
-        if not geo:
-            return None
-
-        lat = geo[0]["lat"]
-        lon = geo[0]["lon"]
-
-        weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
-        weather = requests.get(weather_url).json()
-
-        return weather
-
-    except:
-        return None
-
-
-@st.cache_data(ttl=300)
-def get_forecast_by_coords(city):
-    geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={city}&limit=1&appid={API_KEY}"
-    geo = requests.get(geo_url).json()
-
-    if not geo:
-        return None
-
-    lat = geo[0]["lat"]
-    lon = geo[0]["lon"]
-
-    url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
-    return requests.get(url).json()
-
-
-# ================= LOCATION =================
-def detect_location():
-    try:
-        g = geocoder.ip('me')
-        if g.latlng:
-            lat, lon = g.latlng
-
-            url = f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}"
-            data = requests.get(url).json()
-
-            if data:
-                city = data[0]["name"].lower()
-
-                # fallback fix
-                if city in ["hyderabad", "the dalles", ""]:
-                    return "suryapet"
-
-                return city
-    except:
-        pass
-
-    return "suryapet"
-
-
-# ================= SEARCH =================
-def search_city(query):
-    try:
-        url = f"http://api.openweathermap.org/geo/1.0/direct?q={query}&limit=5&appid={API_KEY}"
-        res = requests.get(url).json()
-        return [f"{p['name']}, {p['country']}" for p in res]
-    except:
-        return []
-
-
-# ================= SESSION =================
-if "city" not in st.session_state:
-    st.session_state.city = detect_location()
-
-if "favorites" not in st.session_state:
-    st.session_state.favorites = []
-
-
-# ================= UI =================
+# ================= STYLE + ANIMATION =================
 st.markdown("""
 <style>
 .stApp {
     background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364);
     color: white;
 }
+
+/* Glass card */
 .card {
     background: rgba(255,255,255,0.08);
     padding: 25px;
@@ -102,10 +26,155 @@ st.markdown("""
     backdrop-filter: blur(15px);
     box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
+
+/* Sun */
+.sun {
+    position: absolute;
+    top: 60px;
+    left: 80%;
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, yellow, orange);
+    border-radius: 50%;
+    animation: floatSun 6s infinite ease-in-out;
+}
+@keyframes floatSun {
+    0% { transform: translateY(0);}
+    50% { transform: translateY(-20px);}
+    100% { transform: translateY(0);}
+}
+
+/* Clouds */
+.cloud {
+    position: absolute;
+    top: 120px;
+    width: 200px;
+    height: 60px;
+    background: white;
+    border-radius: 50px;
+    opacity: 0.7;
+    animation: moveClouds 25s linear infinite;
+}
+.cloud::before {
+    content:'';
+    position:absolute;
+    top:-30px;
+    left:30px;
+    width:100px;
+    height:100px;
+    background:white;
+    border-radius:50%;
+}
+@keyframes moveClouds {
+    0% { left: -200px;}
+    100% { left: 110%;}
+}
+
+/* Rain */
+.rain {
+    position:absolute;
+    width:2px;
+    height:20px;
+    background:lightblue;
+    animation: rainFall 0.5s linear infinite;
+}
+@keyframes rainFall {
+    0% { transform: translateY(0);}
+    100% { transform: translateY(600px);}
+}
+
+/* Lightning */
+.lightning {
+    position:absolute;
+    width:100%;
+    height:100%;
+    animation: lightning 4s infinite;
+}
+@keyframes lightning {
+    0% {background:transparent;}
+    50% {background:white;}
+    100% {background:transparent;}
+}
 </style>
 """, unsafe_allow_html=True)
 
 st.title("🌤 WeatherX")
+
+# ================= NIGHT MODE =================
+hour = datetime.now().hour
+if hour >= 18 or hour <= 6:
+    st.markdown("""
+    <style>
+    .stApp {background: linear-gradient(to right, #000000, #0f2027);}
+    </style>
+    """, unsafe_allow_html=True)
+
+# ================= CACHE =================
+@st.cache_data(ttl=300)
+def get_weather(city):
+    geo = requests.get(
+        f"http://api.openweathermap.org/geo/1.0/direct?q={city}&limit=1&appid={API_KEY}"
+    ).json()
+
+    if not geo:
+        return None
+
+    lat, lon = geo[0]["lat"], geo[0]["lon"]
+
+    return requests.get(
+        f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
+    ).json()
+
+@st.cache_data(ttl=300)
+def get_forecast(city):
+    geo = requests.get(
+        f"http://api.openweathermap.org/geo/1.0/direct?q={city}&limit=1&appid={API_KEY}"
+    ).json()
+
+    if not geo:
+        return None
+
+    lat, lon = geo[0]["lat"], geo[0]["lon"]
+
+    return requests.get(
+        f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
+    ).json()
+
+# ================= LOCATION =================
+def detect_location():
+    try:
+        g = geocoder.ip('me')
+        if g.latlng:
+            lat, lon = g.latlng
+            data = requests.get(
+                f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}"
+            ).json()
+
+            if data:
+                city = data[0]["name"].lower()
+                if city in ["hyderabad", "the dalles", ""]:
+                    return "suryapet"
+                return city
+    except:
+        pass
+    return "suryapet"
+
+# ================= SEARCH =================
+def search_city(query):
+    try:
+        res = requests.get(
+            f"http://api.openweathermap.org/geo/1.0/direct?q={query}&limit=5&appid={API_KEY}"
+        ).json()
+        return [f"{p['name']}, {p['country']}" for p in res]
+    except:
+        return []
+
+# ================= SESSION =================
+if "city" not in st.session_state:
+    st.session_state.city = detect_location()
+
+if "favorites" not in st.session_state:
+    st.session_state.favorites = []
 
 # ================= HEADER =================
 col1, col2, col3 = st.columns([3,1,1])
@@ -144,17 +213,37 @@ city = st.session_state.city
 
 # ================= WEATHER =================
 with st.spinner("Loading weather..."):
-    time.sleep(0.5)
-    data = get_weather_by_coords(city)
+    time.sleep(1)
+    data = get_weather(city)
 
 if not data or str(data.get("cod")) != "200":
     st.error("❌ Location not found")
 else:
+    weather = data["weather"][0]["description"]
+
+    # ================= ANIMATION =================
+    if "clear" in weather:
+        st.markdown('<div class="sun"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="cloud"></div>', unsafe_allow_html=True)
+
+    elif "cloud" in weather:
+        st.markdown('<div class="cloud"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="cloud" style="top:200px;"></div>', unsafe_allow_html=True)
+
+    elif "rain" in weather:
+        for i in range(40):
+            st.markdown(
+                f'<div class="rain" style="left:{i*20}px;"></div>',
+                unsafe_allow_html=True
+            )
+
+    elif "storm" in weather:
+        st.markdown('<div class="lightning"></div>', unsafe_allow_html=True)
+
     temp = data["main"]["temp"]
     feels = data["main"]["feels_like"]
     humidity = data["main"]["humidity"]
     wind = data["wind"]["speed"]
-    weather = data["weather"][0]["description"]
 
     lat = data["coord"]["lat"]
     lon = data["coord"]["lon"]
@@ -195,11 +284,10 @@ else:
     # ================= FORECAST =================
     st.subheader("📊 5-Day Forecast")
 
-    forecast = get_forecast_by_coords(city)
+    forecast = get_forecast(city)
 
     if forecast and "list" in forecast:
-        temps = []
-        days = []
+        temps, days = [], []
 
         for i in range(0, 40, 8):
             item = forecast["list"][i]
