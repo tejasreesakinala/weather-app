@@ -11,8 +11,9 @@ API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 st.set_page_config(page_title="Weather Pro Ultimate", layout="wide")
 
 # ================= SESSION =================
-if "city_name" not in st.session_state:
-    st.session_state.city_name = "Suryapet"
+if city != st.session_state.city_name:
+    st.session_state.city_name = city
+    st.rerun()
 
 # ================= CSS =================
 st.markdown("""
@@ -107,20 +108,23 @@ st.title("🌤 Weather Pro Ultimate")
 col_search, col_gps = st.columns([4,1])
 
 with col_search:
-    city = st.text_input("Search City", key="city_name")
+    city = st.text_input("Search City",value = st.session_state.city_name, key="city_input_box")
 
 with col_gps:
     st.write("")
     if st.button("📍 Auto Detect"):
+    try:
+        ip_data = requests.get("https://ipinfo.io/json").json()
+        detected_city = ip_data.get("city")
 
-        detected_city = None
+        if detected_city:
+            st.session_state.city_name = detected_city
+            st.rerun()
+        else:
+            st.warning("City not found from IP")
 
-        try:
-            ip_data = requests.get("https://ipinfo.io/json").json()
-            detected_city = ip_data.get("city")
-        except:
-            pass
-
+    except:
+        st.error("Auto detect failed")
         if detected_city:
             st.session_state["city_name"] = detected_city
         else:
