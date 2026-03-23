@@ -125,15 +125,8 @@ col_search, col_gps = st.columns([4,1])
 with col_search:
     city = st.text_input(
         "Search City",
-        value=st.session_state.city_name,
-        key="city_input_box"
+        key="city_name"   # ✅ SAME KEY as session_state
     )
-
-    # ✅ FIXED CONDITION
-    if city and city != st.session_state.city_name:
-        st.session_state.city_name = city
-
-
 
 def get_ip_location():
     try:
