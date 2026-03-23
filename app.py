@@ -10,7 +10,7 @@ API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 st.set_page_config(page_title="WeatherX", layout="wide")
 
 # ================= UI STYLE =================
-st.markdown"""
+st.markdown("""
 /* ================= DYNAMIC BACKGROUND ================= */
 .stApp {
     background: linear-gradient(-45deg, #1e3c72, #2a5298, #1c92d2, #2c5364);
@@ -82,7 +82,7 @@ st.markdown"""
     100% { transform: translateY(0); }
 }
 <style>
-""",unsafe_allow_html=True
+"""),unsafe_allow_html=True
 st.title("🌤 WeatherX")
 
 # ================= FUNCTIONS =================
