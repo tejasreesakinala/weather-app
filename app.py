@@ -68,8 +68,8 @@ def normalize_city(city):
 
     district_keywords = ["district", "mandal", "rural"]
     for word in district_keywords:
-    if word in city:
-        return "Hyderabad"
+        if word in city:
+            return "Hyderabad"
 
     
 
