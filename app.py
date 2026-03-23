@@ -119,10 +119,12 @@ with col_gps:
     st.write("")
     if st.button("📍 Auto Detect"):
 
-    # STEP 1: Try GPS (accurate)
+    # STEP 1: define location FIRST
         location = get_geolocation()
 
-    if location and "coords" in location:
+    # STEP 2: check safely
+    if location is not None and "coords" in location:
+
         lat = location["coords"]["latitude"]
         lon = location["coords"]["longitude"]
 
@@ -132,27 +134,16 @@ with col_gps:
 
             if res:
                 st.session_state.city_name = res[0]["name"]
-                st.success(f"Detected (GPS): {res[0]['name']}")
+                st.success(f"Detected: {res[0]['name']}")
                 st.rerun()
+            else:
+                st.warning("City not found from GPS")
 
         except:
-            st.warning("GPS reverse lookup failed")
+            st.error("Reverse lookup failed")
 
-    # STEP 2: Fallback to IP
-    try:
-        ip_data = requests.get("https://ipinfo.io/json").json()
-        detected_city = ip_data.get("city")
-
-        if detected_city:
-            st.session_state.city_name = detected_city
-            st.success(f"Detected (IP): {detected_city}")
-        else:
-            st.session_state.city_name = "Suryapet"
-
-        st.rerun()
-
-    except:
-        st.error("Auto detect completely failed")
+    else:
+        st.warning("⚠️ Allow location permission and click again")
 # ================= FETCH =================
 data = fetch_data( st.session_state["city_name"] )
 
