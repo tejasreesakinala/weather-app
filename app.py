@@ -37,48 +37,62 @@ st.markdown("""
 }
 
 /* ===== REALISTIC CLOUD ===== */
-/* ===== ULTRA REALISTIC CLOUD ===== */
+/* ===== REAL CLOUD (NO PILL SHAPE) ===== */
 .cloud {
     position: fixed;
-    width: 220px;
-    height: 80px;
+    width: 180px;
+    height: 100px;
 
-    /* soft cloud using gradients */
-    background:
-        radial-gradient(circle at 30% 50%, rgba(255,255,255,0.9) 40%, transparent 60%),
-        radial-gradient(circle at 60% 40%, rgba(255,255,255,0.85) 35%, transparent 60%),
-        radial-gradient(circle at 80% 60%, rgba(255,255,255,0.8) 30%, transparent 60%),
-        radial-gradient(circle at 50% 70%, rgba(255,255,255,0.75) 35%, transparent 65%);
+    /* REMOVE base background (this caused pill shape) */
+    background: none;
 
-    filter: blur(1.5px); /* softness */
-    border-radius: 100px;
-
+    filter: blur(2px);
     animation: cloudMove linear infinite;
     z-index: 0;
 }
 
-/* smooth infinite movement */
+/* Create cloud using blobs */
+.cloud::before,
+.cloud::after {
+    content: "";
+    position: absolute;
+    background: rgba(255,255,255,0.9);
+    border-radius: 50%;
+}
+
+/* Main big puff */
+.cloud::before {
+    width: 100px;
+    height: 100px;
+    left: 20px;
+    top: 10px;
+}
+
+/* Side puff */
+.cloud::after {
+    width: 70px;
+    height: 70px;
+    left: 90px;
+    top: 30px;
+}
+
+/* Extra puff using shadow trick (THIS makes it realistic) */
+.cloud {
+    box-shadow:
+        60px 10px 0 20px rgba(255,255,255,0.85),
+        120px 20px 0 10px rgba(255,255,255,0.8);
+}
+
+/* Movement */
 @keyframes cloudMove {
     0% { transform: translateX(-30vw); }
     100% { transform: translateX(120vw); }
 }
 
-/* depth layers */
-.cloud.slow {
-    animation-duration: 90s;
-    opacity: 0.35;
-}
-
-.cloud.medium {
-    animation-duration: 55s;
-    opacity: 0.6;
-}
-
-.cloud.fast {
-    animation-duration: 30s;
-    opacity: 0.9;
-}
-
+/* Layers */
+.cloud.slow { animation-duration: 90s; opacity: 0.4; }
+.cloud.medium { animation-duration: 55s; opacity: 0.6; }
+.cloud.fast { animation-duration: 30s; opacity: 0.9; }
 
 /* ===== SMOOTH CONTINUOUS MOVEMENT ===== */
 @keyframes cloudMove {
