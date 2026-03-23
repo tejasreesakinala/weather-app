@@ -128,7 +128,7 @@ with col_gps:
 
         st.rerun()
 # ================= FETCH =================
-data = fetch_data()
+data = fetch_data( st.session_state["city_name"] )
 
 # ================= EFFECTS =================
 if data:
