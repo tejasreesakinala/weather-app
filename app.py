@@ -37,37 +37,90 @@ st.markdown("""
 }
 
 /* ================= CLEAN CLOUD ================= */
-/* ===== REALISTIC CLOUD ===== */
-/* ===== CLEAN REALISTIC CLOUD (BEST BALANCE) ===== */
+
+
+
+
+/* ================= PREMIUM CLOUD SYSTEM ================= */
+
+/* Base cloud */
 .cloud {
     position: fixed;
-    width: 180px;
+    width: 160px;
     height: 60px;
 
-    background: rgba(255,255,255,0.9);
-    border-radius: 40px;
+    background: #ffffff;
+    border-radius: 50px;
 
     box-shadow:
-        -40px 10px 0 10px rgba(255,255,255,0.85),
-        40px 10px 0 10px rgba(255,255,255,0.85),
-        0px -20px 0 15px rgba(255,255,255,0.95);
+        30px -20px 0 10px #ffffff,
+        60px -10px 0 15px #ffffff,
+        90px 0px 0 10px #ffffff,
+        20px 10px 0 5px rgba(255,255,255,0.9);
 
-    filter: blur(1px); /* very light softness */
+    filter: blur(1px);
+    opacity: 0.85;
 
     animation: cloudMove linear infinite;
     z-index: 0;
 }
 
-/* smooth movement */
+/* Smooth infinite movement */
 @keyframes cloudMove {
-    0% { transform: translateX(-30vw); }
-    100% { transform: translateX(120vw); }
+    0% { transform: translateX(-40vw); }
+    100% { transform: translateX(130vw); }
 }
 
-/* layers */
-.cloud.slow { animation-duration: 90s; opacity: 0.4; }
-.cloud.medium { animation-duration: 60s; opacity: 0.6; }
-.cloud.fast { animation-duration: 35s; opacity: 0.9; }
+/* ===== PARALLAX DEPTH ===== */
+
+/* BACK CLOUDS (far, slow, faint) */
+.cloud.back {
+    transform: scale(1.4);
+    animation-duration: 120s;
+    opacity: 0.25;
+}
+
+/* MID CLOUDS */
+.cloud.mid {
+    transform: scale(1.1);
+    animation-duration: 70s;
+    opacity: 0.5;
+}
+
+/* FRONT CLOUDS (near, fast, bold) */
+.cloud.front {
+    transform: scale(0.9);
+    animation-duration: 35s;
+    opacity: 0.9;
+}
+
+/* Slight floating effect */
+.cloud::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50px;
+    animation: floatCloud 6s ease-in-out infinite;
+}
+
+@keyframes floatCloud {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+    100% { transform: translateY(0px); }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ================= SUN ================= */
 .sun {
@@ -209,18 +262,19 @@ if st.button("Get Weather"):
             # Clouds (always)
             # ================= REALISTIC CLOUD SYSTEM =================
 
-            # BACK LAYER (slow clouds)
-            st.markdown('<div class="cloud slow" style="top:80px; left:10%;"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="cloud slow" style="top:200px; left:60%;"></div>', unsafe_allow_html=True)
+           # ===== PREMIUM CLOUD SYSTEM =====
+            
+            # BACK LAYER (big, slow)
+            st.markdown('<div class="cloud back" style="top:80px;"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="cloud back" style="top:200px; animation-delay:30s;"></div>', unsafe_allow_html=True)
             
             # MID LAYER
-            st.markdown('<div class="cloud medium" style="top:140px; left:30%;"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="cloud medium" style="top:260px; left:80%;"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="cloud mid" style="top:140px; animation-delay:10s;"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="cloud mid" style="top:260px; animation-delay:25s;"></div>', unsafe_allow_html=True)
             
-            # FRONT LAYER (fast clouds)
-            st.markdown('<div class="cloud fast" style="top:100px; left:50%;"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="cloud fast" style="top:220px; left:0%;"></div>', unsafe_allow_html=True)
-                            
+            # FRONT LAYER (fast)
+            st.markdown('<div class="cloud front" style="top:100px; animation-delay:5s;"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="cloud front" style="top:220px; animation-delay:15s;"></div>', unsafe_allow_html=True)
                         
             # Sun only if clear
             if "clear" in weather:
