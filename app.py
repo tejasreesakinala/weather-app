@@ -41,75 +41,52 @@ st.markdown("""
 
 
 
-/* ================= PREMIUM CLOUD SYSTEM ================= */
-
-/* Base cloud */
+/* ===== CLEAN NATURAL CLOUD ===== */
 .cloud {
     position: fixed;
-    width: 160px;
-    height: 60px;
+    width: 140px;
+    height: 50px;
 
     background: #ffffff;
-    border-radius: 50px;
+    border-radius: 30px;
 
+    /* natural bumps */
     box-shadow:
-        30px -20px 0 10px #ffffff,
-        60px -10px 0 15px #ffffff,
-        90px 0px 0 10px #ffffff,
-        20px 10px 0 5px rgba(255,255,255,0.9);
+        25px -15px 0 8px #fff,
+        55px -10px 0 12px #fff,
+        80px 0px 0 8px #fff;
 
-    filter: blur(1px);
     opacity: 0.85;
+    filter: blur(0.8px);
 
     animation: cloudMove linear infinite;
     z-index: 0;
 }
 
-/* Smooth infinite movement */
+/* continuous movement (NO WAITING) */
 @keyframes cloudMove {
-    0% { transform: translateX(-40vw); }
-    100% { transform: translateX(130vw); }
+    from { transform: translateX(-120vw); }
+    to { transform: translateX(120vw); }
 }
 
-/* ===== PARALLAX DEPTH ===== */
-
-/* BACK CLOUDS (far, slow, faint) */
+/* depth layers */
 .cloud.back {
-    transform: scale(1.4);
     animation-duration: 120s;
-    opacity: 0.25;
+    opacity: 0.3;
+    transform: scale(1.3);
 }
 
-/* MID CLOUDS */
 .cloud.mid {
-    transform: scale(1.1);
     animation-duration: 70s;
     opacity: 0.5;
+    transform: scale(1.1);
 }
 
-/* FRONT CLOUDS (near, fast, bold) */
 .cloud.front {
-    transform: scale(0.9);
     animation-duration: 35s;
     opacity: 0.9;
+    transform: scale(0.9);
 }
-
-/* Slight floating effect */
-.cloud::after {
-    content: "";
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 50px;
-    animation: floatCloud 6s ease-in-out infinite;
-}
-
-@keyframes floatCloud {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-6px); }
-    100% { transform: translateY(0px); }
-}
-
 
 
 
