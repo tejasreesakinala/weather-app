@@ -41,32 +41,15 @@ st.markdown("""
 
 
 
-/* ===== TRUE REALISTIC CLOUD (NO PILL SHAPE) ===== */
+/* ===== SVG CLOUD SYSTEM ===== */
 .cloud {
     position: fixed;
-    width: 200px;
-    height: 100px;
-
-    background:
-        radial-gradient(circle at 30% 60%, rgba(255,255,255,0.95) 35%, transparent 60%),
-        radial-gradient(circle at 55% 50%, rgba(255,255,255,0.9) 40%, transparent 65%),
-        radial-gradient(circle at 75% 65%, rgba(255,255,255,0.85) 35%, transparent 65%),
-        radial-gradient(circle at 50% 80%, rgba(255,255,255,0.7) 30%, transparent 70%);
-
-    filter: blur(2px);   /* soft blending but NOT too much */
-    opacity: 0.9;
-
+    width: 180px;
+    opacity: 0.8;
     animation: cloudMove linear infinite;
     z-index: 0;
 }
 
-/* smooth infinite movement */
-@keyframes cloudMove {
-    from { transform: translateX(-120vw); }
-    to { transform: translateX(120vw); }
-}
-
-/* depth layers */
 .cloud.back {
     animation-duration: 120s;
     opacity: 0.3;
@@ -75,20 +58,19 @@ st.markdown("""
 
 .cloud.mid {
     animation-duration: 70s;
-    opacity: 0.5;
+    opacity: 0.6;
     transform: scale(1.1);
 }
 
 .cloud.front {
     animation-duration: 35s;
     opacity: 0.9;
-    transform: scale(0.9);
 }
 
-
-
-
-
+@keyframes cloudMove {
+    from { transform: translateX(-120vw); }
+    to { transform: translateX(120vw); }
+}
 
 
 
@@ -237,17 +219,25 @@ if st.button("Get Weather"):
             # ================= REALISTIC CLOUD SYSTEM =================
             # ===== PERFECT DISTRIBUTED CLOUDS =====
 
-            # BACK (already spread across screen)
-            st.markdown('<div class="cloud back" style="top:80px; left:10%; animation-delay:-40s;"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="cloud back" style="top:200px; left:60%; animation-delay:-80s;"></div>', unsafe_allow_html=True)
+            # ===== PERFECT SVG CLOUDS =====
+
+            cloud_svg = """
+            <svg viewBox="0 0 64 32" xmlns="http://www.w3.org/2000/svg">
+              <path fill="white" d="M20 28h24a10 10 0 0 0 0-20 14 14 0 0 0-27-2A9 9 0 0 0 20 28z"/>
+            </svg>
+            """
             
-            # MID
-            st.markdown('<div class="cloud mid" style="top:140px; left:30%; animation-delay:-20s;"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="cloud mid" style="top:260px; left:75%; animation-delay:-50s;"></div>', unsafe_allow_html=True)
+            # BACK CLOUDS
+            st.markdown(f'<div class="cloud back" style="top:80px; left:10%;">{cloud_svg}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="cloud back" style="top:200px; left:60%;">{cloud_svg}</div>', unsafe_allow_html=True)
             
-            # FRONT
-            st.markdown('<div class="cloud front" style="top:100px; left:50%; animation-delay:-10s;"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="cloud front" style="top:220px; left:0%; animation-delay:-30s;"></div>', unsafe_allow_html=True)
+            # MID CLOUDS
+            st.markdown(f'<div class="cloud mid" style="top:140px; left:30%;">{cloud_svg}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="cloud mid" style="top:260px; left:80%;">{cloud_svg}</div>', unsafe_allow_html=True)
+            
+            # FRONT CLOUDS
+            st.markdown(f'<div class="cloud front" style="top:100px; left:50%;">{cloud_svg}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="cloud front" style="top:220px; left:0%;">{cloud_svg}</div>', unsafe_allow_html=True)
                         
             # Sun only if clear
             if "clear" in weather:
