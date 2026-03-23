@@ -11,119 +11,78 @@ st.set_page_config(page_title="WeatherX", layout="wide")
 
 # ================= UI STYLE =================
 st.markdown("""
-<style>
+/* ================= DYNAMIC BACKGROUND ================= */
 .stApp {
-    background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364);
+    background: linear-gradient(-45deg, #1e3c72, #2a5298, #1c92d2, #2c5364);
+    background-size: 400% 400%;
+    animation: gradientMove 15s ease infinite;
     color: white;
 }
 
-/* Thin Divider */
-hr {
-    margin-top: 5px !important;
-    margin-bottom: 5px !important;
-    height: 1px !important;
-    background: rgba(255,255,255,0.15) !important;
-    border: none !important;
+@keyframes gradientMove {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
 }
 
-/* Glass Card */
-.card {
-    background: rgba(255,255,255,0.08);
-    padding: 25px;
-    border-radius: 20px;
-    backdrop-filter: blur(15px);
-}
+/* ================= CLOUD SYSTEM ================= */
 
-/* Prevent animation overlap */
-.block-container {
-    position: relative;
-    z-index: 1;
-}
-
-/* SUN */
-.sun {
-    position: absolute;
-    top: 60px;
-    left: 70%;
-    width: 90px;
-    height: 90px;
-    background: radial-gradient(circle, yellow, orange);
-    border-radius: 50%;
-    animation: sunMove 10s infinite ease-in-out;
-}
-@keyframes sunMove {
-    0% { transform: translateY(0) translateX(0);}
-    50% { transform: translateY(-25px) translateX(20px);}
-    100% { transform: translateY(0) translateX(0);}
-}
-
-/* CLOUD (FIXED PREMIUM) */
-.cloud {
-    position: absolute;
-    width: 120px;
-    height: 50px;
-    background: rgba(255,255,255,0.85);
-    border-radius: 50px;
-    animation: moveClouds 40s linear infinite;
+/* Back clouds (slow) */
+.cloud-back {
+    position: fixed;
+    top: 100px;
+    width: 200px;
+    height: 80px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 80px;
+    animation: moveCloudsSlow 90s linear infinite;
+    filter: blur(3px);
     z-index: 0;
-    filter: blur(2px);
 }
 
-.cloud::before {
-    content:'';
-    position:absolute;
-    top:-20px;
-    left:20px;
-    width:70px;
-    height:70px;
-    background: rgba(255,255,255,0.85);
-    border-radius:50%;
+/* Front clouds (fast) */
+.cloud-front {
+    position: fixed;
+    top: 200px;
+    width: 140px;
+    height: 60px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 60px;
+    animation: moveCloudsFast 40s linear infinite;
+    z-index: 0;
 }
 
-.cloud::after {
-    content:'';
-    position:absolute;
-    top:-10px;
-    left:60px;
-    width:50px;
-    height:50px;
-    background: rgba(255,255,255,0.85);
-    border-radius:50%;
+@keyframes moveCloudsSlow {
+    0% { transform: translateX(-300px); }
+    100% { transform: translateX(120vw); }
 }
 
-@keyframes moveClouds {
-    0% { left: -150px; }
-    100% { left: 110%; }
+@keyframes moveCloudsFast {
+    0% { transform: translateX(-200px); }
+    100% { transform: translateX(120vw); }
 }
 
-/* RAIN */
-.rain {
-    position:absolute;
-    width:2px;
-    height:20px;
-    background:lightblue;
-    animation: rainFall 0.5s linear infinite;
-}
-@keyframes rainFall {
-    0% { transform: translateY(0);}
-    100% { transform: translateY(600px);}
+/* ================= SUN ================= */
+.sun {
+    position: fixed;
+    top: 80px;
+    left: 70%;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, #ffd700, #ff8c00);
+    border-radius: 50%;
+    animation: sunFloat 10s ease-in-out infinite;
+    box-shadow: 0 0 60px rgba(255, 200, 0, 0.6);
+    z-index: 0;
 }
 
-/* LIGHTNING */
-.lightning {
-    position:absolute;
-    width:100%;
-    height:100%;
-    animation: lightning 4s infinite;
+@keyframes sunFloat {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-25px); }
+    100% { transform: translateY(0); }
 }
-@keyframes lightning {
-    0% {background:transparent;}
-    50% {background:white;}
-    100% {background:transparent;}
-}
-</style>
-""", unsafe_allow_html=True)
-
+<style>
+""",unsafe_allow_html=True
 st.title("🌤 WeatherX")
 
 # ================= FUNCTIONS =================
@@ -220,30 +179,25 @@ else:
     weather = data["weather"][0]["description"]
 
     # ================= ANIMATION =================
-    if "clear" in weather:
-        st.markdown('<div class="sun"></div>', unsafe_allow_html=True)
-        for i in range(4):
-            st.markdown(
-                f'<div class="cloud" style="top:{80 + i*60}px; animation-delay:{i*6}s;"></div>',
-                unsafe_allow_html=True
-            )
+   # ================= NEW SMOOTH ANIMATION =================
 
-    elif "cloud" in weather:
-        for i in range(4):
-            st.markdown(
-                f'<div class="cloud" style="top:{80 + i*60}px; animation-delay:{i*6}s;"></div>',
-                unsafe_allow_html=True
-            )
+# BACK CLOUDS (slow - depth effect)
+for i in range(3):
+    st.markdown(
+        f'<div class="cloud-back" style="top:{100 + i*120}px; animation-delay:{i*20}s;"></div>',
+        unsafe_allow_html=True
+    )
 
-    elif "rain" in weather:
-        for i in range(40):
-            st.markdown(
-                f'<div class="rain" style="left:{i*25}px;"></div>',
-                unsafe_allow_html=True
-            )
+# FRONT CLOUDS (faster - realistic movement)
+for i in range(4):
+    st.markdown(
+        f'<div class="cloud-front" style="top:{150 + i*70}px; animation-delay:{i*8}s;"></div>',
+        unsafe_allow_html=True
+    )
 
-    elif "storm" in weather:
-        st.markdown('<div class="lightning"></div>', unsafe_allow_html=True)
+# SUN (only for clear sky)
+if "clear" in weather:
+    st.markdown('<div class="sun"></div>', unsafe_allow_html=True)
 
     temp = data["main"]["temp"]
     feels = data["main"]["feels_like"]
