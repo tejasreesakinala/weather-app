@@ -25,41 +25,37 @@ def normalize_city(city):
     city = city.lower().strip()
 
     mapping = {
-        # Andhra / Telangana
-        "vizag": "Visakhapatnam",
-        "viz": "Visakhapatnam",
-        "vizianagaram": "Vizianagaram",
+    # Telangana districts → Hyderabad
+    "rr": "Hyderabad",
+    "rangareddy": "Hyderabad",
+    "ranga reddy": "Hyderabad",
+    "medchal": "Hyderabad",
+    "medchal malkajgiri": "Hyderabad",
+    "vikarabad": "Hyderabad",
+    "sangareddy": "Hyderabad",
 
-        "hyd": "Hyderabad",
-        "secunderabad": "Hyderabad",
+    # Andhra Pradesh districts
+    "vizag rural": "Visakhapatnam",
+    "visakhapatnam rural": "Visakhapatnam",
+    "anakapalli": "Visakhapatnam",
 
-        "rr": "Ranga Reddy",
-        "rangareddy": "Ranga Reddy",
-        "ranga reddy": "Ranga Reddy",
+    # Common shortcuts
+    "vizag": "Visakhapatnam",
+    "viz": "Visakhapatnam",
 
-        "suryapet": "Suryapet",
-        "nalgonda": "Nalgonda",
-        "warangal": "Warangal",
-        "karimnagar": "Karimnagar",
-        "khammam": "Khammam",
+    "hyd": "Hyderabad",
+    "secunderabad": "Hyderabad",
 
-        # Common big cities (India)
-        "blore": "Bangalore",
-        "bengaluru": "Bangalore",
-        "bangalore": "Bangalore",
-
-        "madras": "Chennai",
-        "chennai": "Chennai",
-
-        "bombay": "Mumbai",
-        "mumbai": "Mumbai",
-
-        "delhi": "New Delhi",
-        "new delhi": "New Delhi",
-
-        "kolkata": "Kolkata",
-        "calcutta": "Kolkata"
-    }
+    # Big cities safety
+    "bangalore": "Bangalore",
+    "bengaluru": "Bangalore",
+    "chennai": "Chennai",
+    "madras": "Chennai",
+    "mumbai": "Mumbai",
+    "bombay": "Mumbai",
+    "delhi": "New Delhi",
+    "kolkata": "Kolkata"
+}
 
     # Step 1: exact match
     if city in mapping:
@@ -69,6 +65,13 @@ def normalize_city(city):
     for key in mapping:
         if key in city:
             return mapping[key]
+
+    district_keywords = ["district", "mandal", "rural"]
+    for word in district_keywords:
+    if word in city:
+        return "Hyderabad"
+
+    
 
     # Step 3: default formatting
     return city.title()
