@@ -38,35 +38,36 @@ st.markdown("""
 
 /* ================= CLEAN CLOUD ================= */
 /* ===== REALISTIC CLOUD ===== */
-/* ===== ULTRA REALISTIC CLOUD ===== */
+/* ===== CLEAN REALISTIC CLOUD (BEST BALANCE) ===== */
 .cloud {
     position: fixed;
-    width: 220px;
-    height: 90px;
+    width: 180px;
+    height: 60px;
 
-    background:
-        radial-gradient(ellipse at 30% 60%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%),
-        radial-gradient(ellipse at 60% 40%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 70%),
-        radial-gradient(ellipse at 80% 60%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 70%),
-        radial-gradient(ellipse at 50% 70%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%);
+    background: rgba(255,255,255,0.9);
+    border-radius: 40px;
 
-    filter: blur(6px);
-    opacity: 0.8;
+    box-shadow:
+        -40px 10px 0 10px rgba(255,255,255,0.85),
+        40px 10px 0 10px rgba(255,255,255,0.85),
+        0px -20px 0 15px rgba(255,255,255,0.95);
+
+    filter: blur(1px); /* very light softness */
 
     animation: cloudMove linear infinite;
     z-index: 0;
 }
 
+/* smooth movement */
 @keyframes cloudMove {
-    0% { transform: translateX(-25vw); }
+    0% { transform: translateX(-30vw); }
     100% { transform: translateX(120vw); }
 }
 
 /* layers */
-.cloud.slow { animation-duration: 100s; opacity: 0.3; }
-.cloud.medium { animation-duration: 60s; opacity: 0.5; }
-.cloud.fast { animation-duration: 35s; opacity: 0.8; }
-/* movement */
+.cloud.slow { animation-duration: 90s; opacity: 0.4; }
+.cloud.medium { animation-duration: 60s; opacity: 0.6; }
+.cloud.fast { animation-duration: 35s; opacity: 0.9; }
 
 /* ================= SUN ================= */
 .sun {
