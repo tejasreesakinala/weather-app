@@ -6,6 +6,15 @@ from datetime import datetime
 import random
 from streamlit_js_eval import get_geolocation
 
+
+# Fix wrong server locations (Streamlit Cloud issue)
+INVALID_LOCATIONS = ["the dalles", "boardman", "oregon"]
+
+def fix_city(city):
+    if city and city.lower() in INVALID_LOCATIONS:
+        return "Hyderabad"
+    return city
+    
 if "city_name" not in st.session_state:
     st.session_state.city_name = "Suryapet"
 
@@ -152,17 +161,16 @@ with col_gps:
 
             detected_city = get_ip_location()
 
-        # DEBUG (IMPORTANT)
-        st.write("DEBUG:", detected_city)
+            # FIX WRONG LOCATION HERE
+            detected_city = fix_city(detected_city)
 
         if detected_city:
             st.session_state.city_name = detected_city
             st.success(f"📍 Detected: {detected_city}")
         else:
             st.session_state.city_name = "Hyderabad"
-            st.warning("⚠️ Using default: Hyderabad (IP detection failed)")
+            st.warning("Using default location: Hyderabad")
 
-        st.rerun()
         st.rerun()
 
 # ===== FETCH (OUTSIDE COLUMNS) =====
