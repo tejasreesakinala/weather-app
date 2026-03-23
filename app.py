@@ -1,125 +1,221 @@
 import streamlit as st
-import random
+import requests
+import pandas as pd
+import plotly.express as px
 from datetime import datetime
+import random
 from streamlit_js_eval import get_geolocation
 
-# ================= 1. GPS LOGIC (STABLE) =================
-with col_gps:
-    st.write("##")
-    if st.button("📍 Auto-Detect (GPS)", use_container_width=True):
-        location = get_geolocation()
-        
-        # We use a small toast to let the user know we are working
-        with st.spinner("Fetching GPS..."):
-            if location and "coords" in location:
-                lat = location['coords']['latitude']
-                lon = location['coords']['longitude']
-                
-                detected = get_city_name(lat, lon)
-                
-                if detected:
-                    st.session_state.city_name = detected
-                    st.success(f"Found: {detected}")
-                    st.rerun()
-                else:
-                    st.warning("Coordinates found, but city name failed. Resetting to Suryapet.")
-                    st.session_state.city_name = "Suryapet"
-                    st.rerun()
-            else:
-                st.error("⚠️ GPS access denied. Please check browser permissions.")
+# ================= CONFIG =================
+API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
+st.set_page_config(page_title="Weather Pro Ultimate", layout="wide")
 
-# ================= 2. GLOBAL ANIMATION STYLES =================
-# We define keyframes once to keep the DOM clean
+# ================= SESSION =================
+if "city_name" not in st.session_state:
+    st.session_state.city_name = "Suryapet"
+
+# ================= CSS =================
 st.markdown("""
 <style>
-    /* Keyframes for Rain */
-    @keyframes rain-fall {
-        from { transform: translateY(-10vh); }
-        to { transform: translateY(110vh); }
-    }
-    
-    /* Keyframes for Clouds */
-    @keyframes cloud-move {
-        from { left: -250px; }
-        to { left: 110vw; }
-    }
+.stApp {
+    background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #1c92d2);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+    color: white;
+}
+@keyframes gradient {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+}
 
-    /* Keyframes for Sun/Moon Pulse */
-    @keyframes celestial-pulse {
-        0%, 100% { opacity: 0.4; transform: scale(1); }
-        50% { opacity: 0.8; transform: scale(1.1); }
-    }
+.main-card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+    border-radius: 30px;
+    padding: 40px;
+    text-align: center;
+}
 
-    /* Critical: Prevent animations from blocking mouse clicks */
-    .weather-effect {
-        pointer-events: none;
-        position: fixed;
-        z-index: 0;
-    }
+.block-container {
+    position: relative;
+    z-index: 10;
+}
 
-    /* Ensure UI content stays on top */
-    .block-container { 
-        position: relative; 
-        z-index: 10; 
-    }
+/* animations */
+@keyframes cloudMove {
+    from { transform: translateX(-120vw); }
+    to { transform: translateX(120vw); }
+}
+
+@keyframes rainFall {
+    from { transform: translateY(-100px); }
+    to { transform: translateY(110vh); }
+}
 </style>
 """, unsafe_allow_html=True)
 
-# ================= 3. WEATHER EFFECTS (DYNAMIC) =================
-condition = w["weather"][0]["main"].lower()
-hour = datetime.now().hour
-
-# --- SUN / MOON ---
-if "clear" in condition:
-    is_day = 6 <= hour < 18
-    color = "#FFD54F" if is_day else "#ffffff"
-    size = "150px" if is_day else "100px"
-    glow = "70%" if is_day else "50%"
-    
-    st.markdown(f"""
-        <div class="weather-effect" style="
-            top: 80px;
-            right: 80px;
-            width: {size};
-            height: {size};
-            background: radial-gradient(circle, {color} 0%, transparent {glow});
-            filter: blur(15px);
-            animation: celestial-pulse 4s ease-in-out infinite;
-        "></div>
-    """, unsafe_allow_html=True)
-
-# --- RAIN ---
-if "rain" in condition or "drizzle" in condition:
-    rain_drops = ""
-    for _ in range(50):
-        left = random.randint(0, 100)
-        dur = random.uniform(0.6, 1.3)
-        delay = random.uniform(0, 2)
-        rain_drops += f'<div class="weather-effect rain" style="left:{left}%; width:2px; height:20px; background:rgba(255,255,255,0.4); animation: rain-fall {dur}s linear {delay}s infinite;"></div>'
-    st.markdown(rain_drops, unsafe_allow_html=True)
-
-# --- CLOUDS (ALWAYS ON) ---
+# ================= CLOUDS (ALWAYS RUN) =================
 cloud_html = ""
-for i in range(8):
-    top = random.randint(50, 400)
-    speed = random.randint(60, 120)
-    delay = random.randint(-120, 0)
-    opacity = random.uniform(0.2, 0.5)
-    scale = random.uniform(0.8, 1.5)
-    
+for _ in range(10):
     cloud_html += f"""
-    <div class="weather-effect" style="
-        top: {top}px;
-        width: 200px;
-        height: 60px;
-        background: radial-gradient(circle at 30% 50%, white 40%, transparent 70%),
-                    radial-gradient(circle at 60% 40%, white 35%, transparent 70%),
-                    radial-gradient(circle at 80% 60%, white 30%, transparent 70%);
+    <div style="
+        position: fixed;
+        top:{random.randint(50,400)}px;
+        width:{random.randint(120,220)}px;
+        height:60px;
+        background:
+            radial-gradient(circle at 30% 50%, white 40%, transparent 70%),
+            radial-gradient(circle at 60% 40%, white 35%, transparent 70%),
+            radial-gradient(circle at 80% 60%, white 30%, transparent 70%);
         filter: blur(15px);
-        opacity: {opacity};
-        transform: scale({scale});
-        animation: cloud-move {speed}s linear {delay}s infinite;
-        border-radius: 50px;
+        opacity:{random.uniform(0.2,0.5)};
+        animation: cloudMove {random.randint(60,120)}s linear {random.randint(-120,0)}s infinite;
+        border-radius:50px;
+        z-index:0;
     "></div>
     """
 st.markdown(cloud_html, unsafe_allow_html=True)
+
+# ================= FUNCTIONS =================
+def get_city_name(lat, lon):
+    try:
+        url = f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}"
+        res = requests.get(url).json()
+        return res[0]['name'] if res else None
+    except:
+        return None
+
+def fetch_data(city):
+    curr = requests.get(
+        f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+    ).json()
+
+    if curr.get("cod") != 200:
+        return None
+
+    fore = requests.get(
+        f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={API_KEY}&units=metric"
+    ).json()
+
+    return {"current": curr, "forecast": fore}
+
+# ================= TITLE =================
+st.title("🌤 Weather Pro Ultimate")
+
+# ================= INPUT =================
+col_search, col_gps = st.columns([4,1])
+
+with col_search:
+    city = st.text_input("Search City", key="city_name")
+
+with col_gps:
+    st.write("")
+    if st.button("📍 Auto Detect"):
+        location = get_geolocation()
+
+        if location and "coords" in location:
+            lat = location['coords']['latitude']
+            lon = location['coords']['longitude']
+
+            detected = get_city_name(lat, lon)
+
+            if detected:
+                st.session_state.city_name = detected
+            else:
+                st.session_state.city_name = "Suryapet"
+        else:
+            st.warning("Allow location permission")
+
+        st.rerun()
+
+# ================= FETCH =================
+data = fetch_data(st.session_state.city_name)
+
+# ================= EFFECTS =================
+if data:
+    w = data["current"]
+    condition = w["weather"][0]["main"].lower()
+    hour = datetime.now().hour
+
+    # SUN / MOON
+    if "clear" in condition:
+        if 6 <= hour < 18:
+            st.markdown("""
+            <div style="
+                position: fixed;
+                top:80px;
+                right:80px;
+                width:140px;
+                height:140px;
+                background: radial-gradient(circle, #FFD54F 0%, transparent 70%);
+                filter: blur(10px);
+                z-index:0;
+            "></div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div style="
+                position: fixed;
+                top:80px;
+                right:80px;
+                width:100px;
+                height:100px;
+                background: radial-gradient(circle, white 0%, transparent 70%);
+                filter: blur(6px);
+                z-index:0;
+            "></div>
+            """, unsafe_allow_html=True)
+
+    # RAIN
+    if "rain" in condition or "drizzle" in condition:
+        rain_html = ""
+        for _ in range(50):
+            rain_html += f"""
+            <div style="
+                position: fixed;
+                left:{random.randint(0,100)}%;
+                width:2px;
+                height:20px;
+                background: rgba(255,255,255,0.4);
+                animation: rainFall {random.uniform(0.5,1.2)}s linear infinite;
+                z-index:0;
+            "></div>
+            """
+        st.markdown(rain_html, unsafe_allow_html=True)
+
+# ================= DISPLAY =================
+if data:
+    w = data["current"]
+    f = data["forecast"]
+
+    st.markdown(f"""
+    <div class="main-card">
+        <h2>{w['name']}</h2>
+        <h1 style="font-size:60px;">{round(w['main']['temp'])}°C</h1>
+        <p style="font-size:20px;">{w['weather'][0]['description']}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Humidity", f"{w['main']['humidity']}%")
+    m2.metric("Wind", f"{w['wind']['speed']} m/s")
+    m3.metric("Feels", f"{round(w['main']['feels_like'])}°C")
+
+    st.map(pd.DataFrame({
+        "lat":[w['coord']['lat']],
+        "lon":[w['coord']['lon']]
+    }))
+
+    # Forecast
+    st.subheader("📊 Forecast")
+    df = pd.DataFrame([
+        {"Time": i["dt_txt"], "Temp": i["main"]["temp"]}
+        for i in f["list"]
+    ])
+
+    fig = px.line(df, x="Time", y="Temp", template="plotly_dark")
+    st.plotly_chart(fig, use_container_width=True)
+
+else:
+    st.error("❌ City not found")
