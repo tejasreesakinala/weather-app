@@ -104,6 +104,8 @@ def fetch_data(city):
 # ================= TITLE =================
 st.title("🌤 Weather Pro Ultimate")
 
+
+st.caption("📍 Location: " + st.session_state.city_name)
 st.write("Current City:", st.session_state.city_name)
 
 # ================= INPUT =================
