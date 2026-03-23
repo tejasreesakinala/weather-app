@@ -36,47 +36,43 @@ st.markdown("""
     backdrop-filter: blur(12px);
 }
 
-/* ===== REALISTIC CLOUD ===== */
-/* ===== CLEAN REALISTIC CLOUD ===== */
+/* ================= CLEAN CLOUD ================= */
 .cloud {
     position: fixed;
     width: 140px;
     height: 60px;
     background: rgba(255,255,255,0.9);
     border-radius: 50px;
-
     animation: cloudMove linear infinite;
     z-index: 0;
 }
 
-/* top fluffy parts */
-.cloud::before,
+/* fluffy top */
+.cloud::before {
+    content: "";
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 50%;
+    top: -25px;
+    left: 15px;
+}
+
 .cloud::after {
     content: "";
     position: absolute;
-    background: rgba(255,255,255,0.9);
-    border-radius: 50%;
-}
-
-/* left puff */
-.cloud::before {
-    width: 60px;
-    height: 60px;
-    top: -25px;
-    left: 10px;
-}
-
-/* right puff */
-.cloud::after {
     width: 80px;
     height: 80px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 50%;
     top: -35px;
-    left: 50px;
+    left: 55px;
 }
 
-/* smooth movement */
+/* SINGLE animation (no duplicates) */
 @keyframes cloudMove {
-    0% { transform: translateX(-20vw); }
+    0% { transform: translateX(-25vw); }
     100% { transform: translateX(120vw); }
 }
 
@@ -84,29 +80,6 @@ st.markdown("""
 .cloud.slow { animation-duration: 80s; opacity: 0.4; }
 .cloud.medium { animation-duration: 50s; opacity: 0.6; }
 .cloud.fast { animation-duration: 30s; opacity: 0.9; }
-/* Movement */
-@keyframes cloudMove {
-    0% { transform: translateX(-30vw); }
-    100% { transform: translateX(120vw); }
-}
-
-/* Layers */
-.cloud.slow { animation-duration: 90s; opacity: 0.4; }
-.cloud.medium { animation-duration: 55s; opacity: 0.6; }
-.cloud.fast { animation-duration: 30s; opacity: 0.9; }
-
-/* ===== SMOOTH CONTINUOUS MOVEMENT ===== */
-@keyframes cloudMove {
-    0% { transform: translateX(-20vw); }
-    100% { transform: translateX(120vw); }
-}
-
-/* depth layers */
-.cloud.slow { animation-duration: 80s; opacity: 0.4; }
-.cloud.medium { animation-duration: 50s; opacity: 0.6; }
-.cloud.fast { animation-duration: 30s; opacity: 0.9; }
-
-
 
 /* ================= SUN ================= */
 .sun {
