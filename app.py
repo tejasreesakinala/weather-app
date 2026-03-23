@@ -238,20 +238,19 @@ if st.button("Get Weather"):
             # ================= ANIMATION =================
             # Clouds (always)
             # ================= REALISTIC CLOUD SYSTEM =================
+            # ===== PERFECT DISTRIBUTED CLOUDS =====
 
-           # ===== PREMIUM CLOUD SYSTEM =====
+            # BACK (already spread across screen)
+            st.markdown('<div class="cloud back" style="top:80px; left:10%; animation-delay:-40s;"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="cloud back" style="top:200px; left:60%; animation-delay:-80s;"></div>', unsafe_allow_html=True)
             
-            # BACK LAYER (big, slow)
-            st.markdown('<div class="cloud back" style="top:80px;"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="cloud back" style="top:200px; animation-delay:30s;"></div>', unsafe_allow_html=True)
+            # MID
+            st.markdown('<div class="cloud mid" style="top:140px; left:30%; animation-delay:-20s;"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="cloud mid" style="top:260px; left:75%; animation-delay:-50s;"></div>', unsafe_allow_html=True)
             
-            # MID LAYER
-            st.markdown('<div class="cloud mid" style="top:140px; animation-delay:10s;"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="cloud mid" style="top:260px; animation-delay:25s;"></div>', unsafe_allow_html=True)
-            
-            # FRONT LAYER (fast)
-            st.markdown('<div class="cloud front" style="top:100px; animation-delay:5s;"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="cloud front" style="top:220px; animation-delay:15s;"></div>', unsafe_allow_html=True)
+            # FRONT
+            st.markdown('<div class="cloud front" style="top:100px; left:50%; animation-delay:-10s;"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="cloud front" style="top:220px; left:0%; animation-delay:-30s;"></div>', unsafe_allow_html=True)
                         
             # Sun only if clear
             if "clear" in weather:
