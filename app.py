@@ -3,280 +3,192 @@ import requests
 import pandas as pd
 import plotly.express as px
 import geocoder
-from difflib import get_close_matches
+from datetime import datetime
 import random
 
-# ================= CONFIG =================
+# ================= CONFIG & CONSTANTS =================
 API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
-st.set_page_config(page_title="Weather Pro", layout="wide")
+st.set_page_config(page_title="Weather Pro Advanced", layout="wide", page_icon="🌤")
 
-# ================= GLOBAL STATE =================
-if "weather_condition" not in st.session_state:
-    st.session_state.weather_condition = None
+# ================= SESSION STATE INIT =================
+if "weather_data" not in st.session_state:
+    st.session_state.weather_data = None
+if "city_input" not in st.session_state:
+    st.session_state.city_input = "London" # Default starting city
 
-# ================= UI STYLE =================
+# ================= ADVANCED UI STYLE =================
 st.markdown("""
 <style>
+    /* Prevent horizontal scroll and set background */
+    .main { overflow-x: hidden; }
+    
+    .stApp {
+        background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        color: white;
+    }
 
-/* ===== BACKGROUND ===== */
-.stApp {
-    background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #1c92d2);
-    background-size: 400% 400%;
-    animation: gradient 15s ease infinite;
-    color: white;
-}
+    @keyframes gradient {
+        0% {background-position: 0% 50%;}
+        50% {background-position: 100% 50%;}
+        100% {background-position: 0% 50%;}
+    }
 
-@keyframes gradient {
-    0% {background-position: 0% 50%;}
-    50% {background-position: 100% 50%;}
-    100% {background-position: 0% 50%;}
-}
+    /* Glassmorphism Card */
+    .weather-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 25px;
+        border: 1px solid rgba(255,255,255,0.1);
+        margin-bottom: 20px;
+    }
 
-/* ===== CARD ===== */
-.card {
-    background: rgba(255,255,255,0.12);
-    padding: 20px;
-    border-radius: 20px;
-    backdrop-filter: blur(15px);
-    box-shadow: 0 0 30px rgba(0,0,0,0.2);
-}
+    /* Animations */
+    .rain {
+        position: fixed;
+        width: 2px;
+        height: 15px;
+        background: rgba(255,255,255,0.4);
+        top: -10%;
+        z-index: 0;
+        pointer-events: none;
+        animation: fall linear infinite;
+    }
+    @keyframes fall { to { transform: translateY(110vh); } }
 
-/* ===== CLOUD SYSTEM ===== */
-.cloud {
-    position: fixed;
-    pointer-events: none;
-    animation: cloudMove linear infinite;
-    z-index: 0;
-}
+    .sun-glow {
+        position: fixed;
+        top: 50px;
+        right: 50px;
+        width: 120px;
+        height: 120px;
+        background: radial-gradient(circle, #ffca28 0%, rgba(255,202,40,0) 70%);
+        filter: blur(20px);
+        animation: pulse 4s ease-in-out infinite;
+        z-index: 0;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
-.cloud.back { animation-duration: 160s; opacity: 0.25; }
-.cloud.mid { animation-duration: 90s; opacity: 0.5; }
-.cloud.front { animation-duration: 45s; opacity: 0.85; }
-
-@keyframes cloudMove {
-    from { transform: translateX(-150vw); }
-    to { transform: translateX(120vw); }
-}
-
-/* ===== SUN ===== */
-.sun {
-    position: fixed;
-    top: 80px;
-    right: 120px;
-    width: 100px;
-    height: 100px;
-    background: radial-gradient(circle, #FFD700, #FF8C00);
-    border-radius: 50%;
-    box-shadow: 0 0 80px rgba(255,200,0,0.6);
-    animation: sunMove 6s ease-in-out infinite;
-}
-
-@keyframes sunMove {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(-25px); }
-    100% { transform: translateY(0); }
-}
-
-/* ===== RAIN ===== */
-.rain {
-    position: fixed;
-    width: 2px;
-    height: 15px;
-    background: rgba(255,255,255,0.5);
-    animation: rainFall linear infinite;
-}
-
-@keyframes rainFall {
-    from { transform: translateY(-100px); }
-    to { transform: translateY(100vh); }
-}
-
-/* UI ABOVE */
-.block-container {
-    position: relative;
-    z-index: 1;
-}
-
+    /* Cloud styling */
+    .cloud-svg {
+        position: fixed;
+        opacity: 0.3;
+        z-index: 0;
+        pointer-events: none;
+        animation: float linear infinite;
+    }
+    @keyframes float {
+        from { left: -20%; }
+        to { left: 110%; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🌤 Weather Pro Dashboard")
-
-# Fix HTML rendering bug
-st.markdown("<div></div>", unsafe_allow_html=True)
-
-# ================= CLOUD SVG =================
-cloud_svg = """
-<svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <filter id="soft">
-      <feGaussianBlur stdDeviation="4"/>
-    </filter>
-  </defs>
-  <g filter="url(#soft)">
-    <ellipse cx="60" cy="60" rx="55" ry="30" fill="white"/>
-    <ellipse cx="120" cy="55" rx="50" ry="28" fill="white"/>
-    <ellipse cx="160" cy="65" rx="35" ry="22" fill="white"/>
-    <ellipse cx="90" cy="75" rx="65" ry="28" fill="white"/>
-  </g>
-</svg>
-"""
-
-# ================= CLOUDS (ALWAYS RUNNING) =================
-for i in range(12):
-    size = random.randint(140, 300)
-    top = random.randint(30, 350)
-    speed = random.choice(["back", "mid", "front"])
-    delay = random.uniform(-150, 0)
-
-    st.markdown(
-        f"""
-        <div class="cloud {speed}" 
-             style="top:{top}px; width:{size}px; animation-delay:{delay}s;">
-             {cloud_svg}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-# ================= WEATHER EFFECTS =================
-if st.session_state.weather_condition:
-
-    weather = st.session_state.weather_condition.lower()
-
-    # ☀️ Sun
-    if "clear" in weather:
-        st.markdown('<div class="sun"></div>', unsafe_allow_html=True)
-
-    # 🌧 Rain
-    if "rain" in weather:
-        for i in range(60):
-            left = random.randint(0, 100)
-            delay = random.uniform(0, 5)
-            speed = random.uniform(0.5, 1.5)
-
-            st.markdown(
-                f"""
-                <div class="rain"
-                     style="
-                        left:{left}%;
-                        animation-duration:{speed}s;
-                        animation-delay:{delay}s;
-                     ">
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-# ================= LOCATION =================
-def detect_location():
+# ================= HELPER FUNCTIONS =================
+def get_weather(city_name):
     try:
-        g = geocoder.ip('me')
-        if g.latlng:
-            lat, lon = g.latlng
-            url = f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}"
-            data = requests.get(url).json()
-            if data:
-                city = data[0]["name"].lower()
-                if city in ["hyderabad", ""]:
-                    return "suryapet"
-                return city
-        return "suryapet"
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={API_KEY}&units=metric"
+        res = requests.get(url).json()
+        if res.get("cod") == 200:
+            return res
+        return None
     except:
-        return "suryapet"
+        return None
 
-# ================= SESSION =================
-if "city" not in st.session_state:
-    st.session_state["city"] = detect_location()
+def get_forecast(city_name):
+    url = f"https://api.openweathermap.org/data/2.5/forecast?q={city_name}&appid={API_KEY}&units=metric"
+    return requests.get(url).json()
 
-# ================= INPUT =================
-col1, col2 = st.columns([3,1])
+# ================= DYNAMIC VISUAL EFFECTS =================
+def render_effects(condition):
+    condition = condition.lower()
+    if "rain" in condition or "drizzle" in condition:
+        for _ in range(50):
+            left = random.randint(0, 100)
+            dur = random.uniform(0.5, 1.5)
+            delay = random.uniform(0, 2)
+            st.markdown(f'<div class="rain" style="left:{left}%; animation-duration:{dur}s; animation-delay:{delay}s;"></div>', unsafe_allow_html=True)
+    
+    if "clear" in condition:
+        st.markdown('<div class="sun-glow"></div>', unsafe_allow_html=True)
 
-with col1:
-    st.text_input("Enter City", key="city")
+    # Ambient Clouds
+    for i in range(5):
+        top = random.randint(5, 40)
+        dur = random.randint(60, 120)
+        st.markdown(f'<div class="cloud-svg" style="top:{top}%; animation-duration:{dur}s;">☁️</div>', unsafe_allow_html=True)
 
-with col2:
-    if st.button("📍 Auto Detect"):
-        st.session_state["city"] = detect_location()
-        st.rerun()
+# ================= MAIN UI =================
+st.title("🌡️ Weather Pro Advanced")
 
-city = st.session_state["city"].lower()
+# Search Bar Logic
+col_search, col_gps = st.columns([4, 1])
+with col_search:
+    city_input = st.text_input("Enter City Name", value=st.session_state.city_input)
+with col_gps:
+    st.write("##")
+    if st.button("📍 Locate"):
+        g = geocoder.ip('me')
+        if g.city:
+            st.session_state.city_input = g.city
+            st.rerun()
 
-# ================= CITY FIX =================
-city_alias = {
-    "hyd": "hyderabad",
-    "vizag": "visakhapatnam",
-    "bangalore": "bengaluru",
-    "bombay": "mumbai",
-    "madras": "chennai",
-    "delhi": "new delhi"
-}
-
-if city in city_alias:
-    city = city_alias[city]
-else:
-    match = get_close_matches(city, city_alias.keys(), n=1, cutoff=0.7)
-    if match:
-        city = city_alias[match[0]]
-
-# ================= WEATHER =================
-if st.button("Get Weather"):
-
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
-    data = requests.get(url).json()
-
-    if str(data.get("cod")) != "200":
-        st.error("❌ City not found")
+# Trigger Weather Fetch
+if city_input:
+    data = get_weather(city_input)
+    if data:
+        st.session_state.weather_data = data
+        render_effects(data['weather'][0]['main'])
     else:
-        temp = data["main"]["temp"]
-        feels = data["main"]["feels_like"]
-        humidity = data["main"]["humidity"]
-        wind = data["wind"]["speed"]
-        weather = data["weather"][0]["description"]
+        st.error("City not found. Please try again.")
 
-        # SAVE CONDITION (IMPORTANT)
-        st.session_state.weather_condition = weather
+# Display Dashboard
+if st.session_state.weather_data:
+    w = st.session_state.weather_data
+    
+    # Hero Section
+    col_main, col_map = st.columns([2, 2])
+    
+    with col_main:
+        st.markdown(f"""
+        <div class="weather-card">
+            <h2 style='margin:0;'>{w['name']}, {w['sys']['country']}</h2>
+            <p style='font-size: 1.2rem; opacity: 0.8;'>{datetime.now().strftime('%A, %b %d')}</p>
+            <h1 style='font-size: 4rem; margin: 10px 0;'>{round(w['main']['temp'])}°C</h1>
+            <p style='text-transform: capitalize; font-size: 1.5rem;'>{w['weather'][0]['description']}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Humidity", f"{w['main']['humidity']}%")
+        m2.metric("Wind", f"{w['wind']['speed']} m/s")
+        m3.metric("Feels Like", f"{round(w['main']['feels_like'])}°C")
 
-        # ICON
-        if "clear" in weather:
-            icon = "☀️"
-        elif "cloud" in weather:
-            icon = "☁️"
-        elif "rain" in weather:
-            icon = "🌧"
-        else:
-            icon = "🌤"
+    with col_map:
+        # Simple Map View
+        map_data = pd.DataFrame({'lat': [w['coord']['lat']], 'lon': [w['coord']['lon']]})
+        st.map(map_data, zoom=10, use_container_width=True)
 
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.markdown('<div class="card">', unsafe_allow_html=True)
-            st.success(f"📍 {city.title()}")
-            st.markdown(f"# {icon} {temp}°C")
-            st.metric("Feels Like", f"{feels} °C")
-            st.metric("Humidity", f"{humidity}%")
-            st.metric("Wind Speed", f"{wind} m/s")
-            st.write(f"Condition: {weather.title()}")
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        with col2:
-            lat = data["coord"]["lat"]
-            lon = data["coord"]["lon"]
-            st.map(pd.DataFrame({"lat":[lat], "lon":[lon]}))
-
-        # ===== FORECAST =====
-        st.subheader("📊 5-Day Forecast")
-
-        forecast = requests.get(
-            f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={API_KEY}&units=metric"
-        ).json()
-
-        temps, days = [], []
-        for i in range(0, 40, 8):
-            item = forecast["list"][i]
-            temps.append(item["main"]["temp"])
-            days.append(item["dt_txt"].split()[0])
-
-        df = pd.DataFrame({"Day": days, "Temperature": temps})
-        fig = px.line(df, x="Day", y="Temperature", markers=True)
+    # Forecast Section
+    st.divider()
+    st.subheader("📅 5-Day Temperature Trend")
+    forecast_data = get_forecast(w['name'])
+    
+    if forecast_data.get("cod") == "200":
+        # Extract noon readings for a cleaner 5-day chart
+        list_data = forecast_data['list']
+        chart_df = pd.DataFrame([
+            {
+                "Time": item['dt_txt'],
+                "Temp (°C)": item['main']['temp'],
+                "Condition": item['weather'][0]['main']
+            } for item in list_data
+        ])
+        
+        fig = px.area(chart_df, x="Time", y="Temp (°C)", 
+                      color_discrete_sequence=['#1c92d2'],
+                      template="plotly_dark")
+        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig, use_container_width=True)
