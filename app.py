@@ -111,42 +111,44 @@ col_search, col_gps = st.columns([4,1])
 with col_search:
     city = st.text_input("Search City",value = st.session_state.city_name, key="city_input_box")
 
-if city != st.session_state.city_name:
-    st.session_state.city_name = city
-    st.rerun()
-
-with col_gps:
-    st.write("")
-    if st.button("📍 Auto Detect"):
-
-    # STEP 1: define location FIRST
-        location = get_geolocation()
-
-    # STEP 2: check safely
-    if location is not None and "coords" in location:
-
-        lat = location["coords"]["latitude"]
-        lon = location["coords"]["longitude"]
-
-        try:
-            url = f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}"
-            res = requests.get(url).json()
-
-            if res:
-                st.session_state.city_name = res[0]["name"]
-                st.success(f"Detected: {res[0]['name']}")
-                st.rerun()
+     if city != st.session_state.city_name:
+            st.session_state.city_name = city
+            st.rerun()
+        
+        with col_gps:
+            st.write("")
+            if st.button("📍 Auto Detect"):
+        
+            # STEP 1: define location FIRST
+                location = get_geolocation()
+        
+            # STEP 2: check safely
+            if location is not None and "coords" in location:
+        
+                lat = location["coords"]["latitude"]
+                lon = location["coords"]["longitude"]
+        
+                try:
+                    url = f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}"
+                    res = requests.get(url).json()
+        
+                    if res:
+                        st.session_state.city_name = res[0]["name"]
+                        st.success(f"Detected: {res[0]['name']}")
+                        st.rerun()
+                    else:
+                        st.warning("City not found from GPS")
+        
+                except:
+                    st.error("Reverse lookup failed")
+        
             else:
-                st.warning("City not found from GPS")
+                st.warning("⚠️ Allow location permission and click again")
+        # ================= FETCH =================
+        data = fetch_data( st.session_state["city_name"] )
 
-        except:
-            st.error("Reverse lookup failed")
 
-    else:
-        st.warning("⚠️ Allow location permission and click again")
-# ================= FETCH =================
-data = fetch_data( st.session_state["city_name"] )
-
+       
 # ================= EFFECTS =================
 if data:
     w = data["current"]
