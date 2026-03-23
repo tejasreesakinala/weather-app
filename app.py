@@ -103,7 +103,7 @@ st.markdown("""
 
 st.title("🌤 Weather Pro Dashboard")
 
- cloud_svg = """
+cloud_svg = """
 <svg viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
   <g filter="url(#shadow)">
     <ellipse cx="40" cy="35" rx="35" ry="20" fill="white"/>
