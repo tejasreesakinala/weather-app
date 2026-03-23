@@ -84,7 +84,7 @@ st.session_state.city_name = normalize_city(st.session_state.city_name)
 
 # ================= CONFIG =================
 API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
-st.set_page_config(page_title="Weather Pro Ultimate", layout="wide")
+st.set_page_config(page_title="WeatherX", layout="wide")
 
 # ================= CSS =================
 st.markdown("""
@@ -183,8 +183,8 @@ def fetch_data(city):
         return None
 
 # ================= TITLE =================
-st.title("🌤 Weather Pro Ultimate")
-
+st.title("🌤 WeatherX")
+st.caption("Smart Weather Intelligence System")
 
 st.caption("📍 Location: " + st.session_state.city_name)
 st.write("Current City:", st.session_state.city_name)
