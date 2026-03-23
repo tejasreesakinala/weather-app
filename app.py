@@ -203,14 +203,23 @@ col_search, col_gps = st.columns([4,1])
 
 # ===== SEARCH =====
 with col_search:
-    search = st.text_input("Search City")
+    search = st.text_input("Search City", key="search_box")
+
+    selected = None
     
-    suggestions = [c for c in CITY_LIST if search.lower() in c.lower()] if search else []
+    # show suggestions ONLY if user typed something but not exact match
+    if search and search.lower() not in [c.lower() for c in CITY_LIST]:
+        
+        suggestions = [c for c in CITY_LIST if search.lower() in c.lower()]
+        
+        if suggestions:
+            selected = st.selectbox("Suggestions", suggestions)
     
-    selected = st.selectbox("Suggestions", suggestions) if suggestions else None
-    
+    # if user selects OR types full correct name
     if selected:
         st.session_state.city_name = selected
+    elif search:
+        st.session_state.city_name = search
 
 def get_ip_location():
     try:
