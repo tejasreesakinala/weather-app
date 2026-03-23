@@ -188,6 +188,18 @@ if st.button("Get Weather"):
             wind = data["wind"]["speed"]
             weather = data["weather"][0]["description"]
 
+            # ================= ANIMATION =================
+# Clouds (always)
+for i in range(4):
+    st.markdown(
+        f'<div class="cloud" style="top:{120 + i*80}px; animation-delay:{i*6}s;"></div>',
+        unsafe_allow_html=True
+    )
+
+# Sun only if clear
+if "clear" in weather:
+    st.markdown('<div class="sun"></div>', unsafe_allow_html=True)
+
             # ================= ICON =================
             if "clear" in weather:
                 icon = "☀️"
