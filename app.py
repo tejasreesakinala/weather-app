@@ -25,16 +25,6 @@ if "city_name" not in st.session_state:
 API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 st.set_page_config(page_title="Weather Pro Ultimate", layout="wide")
 
-
-def auto_detect_city():
-    detected_city = get_ip_location()
-    if detected_city:
-        detected_city = fix_city(detected_city)
-        st.session_state.city_name = detected_city
-    else:
-        st.session_state.city_name = "Hyderabad"
-
-
 # ================= CSS =================
 st.markdown("""
 <style>
@@ -169,14 +159,13 @@ def get_ip_location():
 # ===== AUTO DETECT FUNCTION =====
 def auto_detect_city():
     detected_city = get_ip_location()
-
-    # fix wrong server location
     detected_city = fix_city(detected_city)
 
-    if detected_city:
-        st.session_state.city_name = detected_city
-    else:
-        st.session_state.city_name = "Hyderabad"
+    # if detection is too generic → use your default
+    if not detected_city or detected_city.lower() in ["hyderabad"]:
+        detected_city = "Suryapet"
+
+    st.session_state.city_name = detected_city
 
 
 # ===== AUTO DETECT BUTTON =====
