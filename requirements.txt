@@ -3,3 +3,4 @@ requests
 pandas
 plotly
 geocoder
+streamlit-js-eval
