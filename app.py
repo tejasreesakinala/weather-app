@@ -141,16 +141,16 @@ for i in range(8):
     
             
             # BACK CLOUDS
-            st.markdown(f'<div class="cloud back" style="top:80px; left:10%;">{cloud_svg}</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="cloud back" style="top:200px; left:60%;">{cloud_svg}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="cloud back" style="top:80px; left:10%;">{cloud_svg}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="cloud back" style="top:200px; left:60%;">{cloud_svg}</div>', unsafe_allow_html=True)
             
             # MID CLOUDS
-            st.markdown(f'<div class="cloud mid" style="top:140px; left:30%;">{cloud_svg}</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="cloud mid" style="top:260px; left:80%;">{cloud_svg}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="cloud mid" style="top:140px; left:30%;">{cloud_svg}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="cloud mid" style="top:260px; left:80%;">{cloud_svg}</div>', unsafe_allow_html=True)
             
             # FRONT CLOUDS
-            st.markdown(f'<div class="cloud front" style="top:100px; left:50%;">{cloud_svg}</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="cloud front" style="top:220px; left:0%;">{cloud_svg}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="cloud front" style="top:100px; left:50%;">{cloud_svg}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="cloud front" style="top:220px; left:0%;">{cloud_svg}</div>', unsafe_allow_html=True)
 
 # ================= LOCATION DETECT =================
 def detect_location():
