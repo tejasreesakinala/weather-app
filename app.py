@@ -86,11 +86,21 @@ st.session_state.city_name = normalize_city(st.session_state.city_name)
 API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 st.set_page_config(page_title="WeatherX", layout="wide")
 
+# ===== TIME BASED BACKGROUND =====
+hour = datetime.now().hour
+
+if 6 <= hour < 17:
+    bg = "linear-gradient(-45deg, #4facfe, #00f2fe, #43cea2)"   # Morning
+elif 17 <= hour < 20:
+    bg = "linear-gradient(-45deg, #ff7e5f, #feb47b)"            # Evening
+else:
+    bg = "linear-gradient(-45deg, #0f2027, #203a43, #2c5364)"   # Night
+
 # ================= CSS =================
 st.markdown("""
 <style>
 .stApp {
-    background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #1c92d2);
+    background: {bg};
     background-size: 400% 400%;
     animation: gradient 15s ease infinite;
     color: white;
@@ -286,6 +296,25 @@ if data:
             "></div>
             """
         st.markdown(rain_html, unsafe_allow_html=True)
+
+
+    # ===== NIGHT STARS =====
+    if hour >= 20 or hour < 6:
+        stars_html = ""
+        for _ in range(80):
+            stars_html += f"""
+            <div style="
+                position: fixed;
+                top:{random.randint(0,100)}%;
+                left:{random.randint(0,100)}%;
+                width:2px;
+                height:2px;
+                background:white;
+                opacity:{random.uniform(0.3,1)};
+                z-index:0;
+            "></div>
+            """
+        st.markdown(stars_html, unsafe_allow_html=True)
 
 # ================= DISPLAY =================
 if data:
