@@ -3,8 +3,14 @@ import requests
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
+import pytz
 import random
 from streamlit_js_eval import get_geolocation
+
+ist = pytz.timezone('Asia/Kolkata')
+hour = datetime.now(ist).hour
+
+st.write("Current Hour:", hour)
 
 # Fix wrong server locations (Streamlit Cloud issue)
 INVALID_LOCATIONS = ["the dalles", "boardman", "oregon"]
