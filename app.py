@@ -234,7 +234,7 @@ if st.button("Get Weather"):
             # FRONT LAYER (fast clouds)
             st.markdown('<div class="cloud fast" style="top:100px; left:50%;"></div>', unsafe_allow_html=True)
             st.markdown('<div class="cloud fast" style="top:220px; left:0%;"></div>', unsafe_allow_html=True)
-                            )
+                            
                         
             # Sun only if clear
             if "clear" in weather:
