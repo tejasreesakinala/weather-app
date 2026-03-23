@@ -114,8 +114,8 @@ with col_search:
      if city != st.session_state.city_name:
             st.session_state.city_name = city
             st.rerun()
-        
-        with col_gps:
+
+with col_gps:
             st.write("")
             if st.button("📍 Auto Detect"):
         
@@ -148,6 +148,7 @@ with col_search:
         data = fetch_data( st.session_state["city_name"] )
 
 
+       
        
 # ================= EFFECTS =================
 if data:
