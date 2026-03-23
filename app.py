@@ -13,6 +13,8 @@ st.set_page_config(page_title="Weather Pro", layout="wide")
 # ================= BACKGROUND =================
 st.markdown("""
 <style>
+
+/* ================= BACKGROUND ================= */
 .stApp {
     background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #1c92d2);
     background-size: 400% 400%;
@@ -26,12 +28,55 @@ st.markdown("""
     100% {background-position: 0% 50%;}
 }
 
+/* ================= CARD ================= */
 .card {
     background: rgba(255,255,255,0.1);
     padding: 20px;
     border-radius: 20px;
     backdrop-filter: blur(12px);
 }
+
+/* ================= CLOUDS ================= */
+.cloud {
+    position: fixed;
+    width: 140px;
+    height: 60px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 60px;
+    animation: moveCloud 40s linear infinite;
+    z-index: 0;
+}
+
+@keyframes moveCloud {
+    0% { transform: translateX(-200px); }
+    100% { transform: translateX(120vw); }
+}
+
+/* ================= SUN ================= */
+.sun {
+    position: fixed;
+    top: 80px;
+    right: 100px;
+    width: 90px;
+    height: 90px;
+    background: radial-gradient(circle, #FFD700, #FF8C00);
+    border-radius: 50%;
+    animation: sunMove 8s ease-in-out infinite;
+    box-shadow: 0 0 50px rgba(255,200,0,0.6);
+}
+
+@keyframes sunMove {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0); }
+}
+
+/* keep UI above animation */
+.block-container {
+    position: relative;
+    z-index: 1;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
