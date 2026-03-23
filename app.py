@@ -221,12 +221,21 @@ if st.button("Get Weather"):
 
             # ================= ANIMATION =================
             # Clouds (always)
-            for i in range(4):
-                st.markdown(
-                    f'<div class="cloud" style="top:{120 + i*80}px; animation-delay:{i*6}s;"></div>',
-                    unsafe_allow_html=True
-                )
+            # ================= REALISTIC CLOUD SYSTEM =================
+
+            # BACK LAYER (slow clouds)
+            st.markdown('<div class="cloud slow" style="top:80px; left:10%;"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="cloud slow" style="top:200px; left:60%;"></div>', unsafe_allow_html=True)
             
+            # MID LAYER
+            st.markdown('<div class="cloud medium" style="top:140px; left:30%;"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="cloud medium" style="top:260px; left:80%;"></div>', unsafe_allow_html=True)
+            
+            # FRONT LAYER (fast clouds)
+            st.markdown('<div class="cloud fast" style="top:100px; left:50%;"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="cloud fast" style="top:220px; left:0%;"></div>', unsafe_allow_html=True)
+                            )
+                        
             # Sun only if clear
             if "clear" in weather:
                 st.markdown('<div class="sun"></div>', unsafe_allow_html=True)
