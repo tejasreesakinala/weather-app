@@ -104,6 +104,8 @@ def fetch_data(city):
 # ================= TITLE =================
 st.title("🌤 Weather Pro Ultimate")
 
+st.write("Current City:", st.session_state.city_name)
+
 # ================= INPUT =================
 col_search, col_gps = st.columns([4,1])
 
@@ -150,13 +152,15 @@ with col_gps:
 
             if detected_city:
                 st.session_state.city_name = detected_city
-                st.success(f"Detected: {detected_city}")
-                st.rerun()
+
+                # 👇 SHOW MESSAGE BEFORE RERUN
+                st.toast(f"📍 Detected: {detected_city}")
+
             else:
-                # FINAL fallback (never fails)
                 st.session_state.city_name = "Hyderabad"
-                st.warning("Using default location: Hyderabad")
-                st.rerun()
+                st.toast("⚠️ Using default: Hyderabad")
+
+        st.rerun()
 
 # ===== FETCH (OUTSIDE COLUMNS) =====
 data = fetch_data(st.session_state.city_name)
