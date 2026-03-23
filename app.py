@@ -118,21 +118,41 @@ if city != st.session_state.city_name:
 with col_gps:
     st.write("")
     if st.button("📍 Auto Detect"):
-        try:
-            ip_data = requests.get("https://ipinfo.io/json").json()
-            detected_city = ip_data.get("city")
-    
-            if detected_city:
-                st.session_state.city_name = detected_city
-                st.rerun()
-            else:
-                st.session_state.city_name = "Suryapet"
 
-            st.rerun
+    # STEP 1: Try GPS (accurate)
+    location = get_geolocation()
+
+    if location and "coords" in location:
+        lat = location["coords"]["latitude"]
+        lon = location["coords"]["longitude"]
+
+        try:
+            url = f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}"
+            res = requests.get(url).json()
+
+            if res:
+                st.session_state.city_name = res[0]["name"]
+                st.success(f"Detected (GPS): {res[0]['name']}")
+                st.rerun()
+
         except:
-            st.error("Auto detect failed")
+            st.warning("GPS reverse lookup failed")
+
+    # STEP 2: Fallback to IP
+    try:
+        ip_data = requests.get("https://ipinfo.io/json").json()
+        detected_city = ip_data.get("city")
+
+        if detected_city:
+            st.session_state.city_name = detected_city
+            st.success(f"Detected (IP): {detected_city}")
+        else:
+            st.session_state.city_name = "Suryapet"
 
         st.rerun()
+
+    except:
+        st.error("Auto detect completely failed")
 # ================= FETCH =================
 data = fetch_data( st.session_state["city_name"] )
 
