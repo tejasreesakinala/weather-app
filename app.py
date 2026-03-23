@@ -7,6 +7,13 @@ import random
 from streamlit_js_eval import get_geolocation
 
 
+CITY_LIST = [
+    "Hyderabad", "Visakhapatnam", "Vijayawada", "Guntur",
+    "Warangal", "Karimnagar", "Nizamabad", "Khammam",
+    "Suryapet", "Nalgonda", "Adilabad", "Mahabubnagar",
+    "Bangalore", "Chennai", "Mumbai", "Delhi", "Kolkata", "Pune"
+]
+
 # Fix wrong server locations (Streamlit Cloud issue)
 INVALID_LOCATIONS = ["the dalles", "boardman", "oregon"]
 
@@ -196,10 +203,14 @@ col_search, col_gps = st.columns([4,1])
 
 # ===== SEARCH =====
 with col_search:
-    city = st.text_input(
-        "Search City",
-        key="city_name"   # ✅ SAME KEY as session_state
-    )
+    search = st.text_input("Search City")
+    
+    suggestions = [c for c in CITY_LIST if search.lower() in c.lower()] if search else []
+    
+    selected = st.selectbox("Suggestions", suggestions) if suggestions else None
+    
+    if selected:
+        st.session_state.city_name = selected
 
 def get_ip_location():
     try:
