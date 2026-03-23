@@ -112,24 +112,23 @@ with col_search:
 with col_gps:
     st.write("")
     if st.button("📍 Auto Detect"):
+
+        detected_city = None
+
         try:
             ip_data = requests.get("https://ipinfo.io/json").json()
-            city = ip_data.get("city")
-
-            if city:
-                st.session_state.city_name = city
-                st.success(f"Detected: {city}")
-            else:
-                st.session_state.city_name = "Suryapet"
-                st.warning("Using default location")
-
+            detected_city = ip_data.get("city")
         except:
-            st.session_state.city_name = "Suryapet"
-            st.error("Detection failed")
+            pass
+
+        if detected_city:
+            st.session_state["city_name"] = detected_city
+        else:
+            st.session_state["city_name"] = "Suryapet"
 
         st.rerun()
 # ================= FETCH =================
-data = fetch_data(st.session_state.city_name)
+data = fetch_data()
 
 # ================= EFFECTS =================
 if data:
