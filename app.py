@@ -166,20 +166,21 @@ col1, col2 = st.columns([4,1])
 
 with col1:
     st.text_input("Search City", key="city_input")
-    city = st.session_state.city_input
+    city = st.text_input("Search City", key = "city_input")
 
 with col2:
     st.write("")
     if st.button("📍 Auto Detect"):
         try:
             g = geocoder.ipinfo('me')
-            if g.city:
-                st.session_state.city_input = g.city
-            else:
-                st.session_state.city_input = "Suryapet"
-        except:
-            st.session_state.city_input = "Suryapet"
+
+            detected_city = g.city if g.city else "Suryapet"
+
+            st.session_state["city_input"] = detected_city
+        except :
+            st.session_state["city_input"] = "Suryapet"
         st.rerun()
+
 
 # ================= FETCH =================
 if city:
