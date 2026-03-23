@@ -15,6 +15,9 @@ st.set_page_config(page_title="Weather Pro Ultimate", layout="wide")
 
 # ================= SESSION =================
 
+if "city_name" not in st.session_state:
+    st.session_state.city_name = "Suryapet"
+
 
 # ================= CSS =================
 st.markdown("""
@@ -121,39 +124,59 @@ with col_search:
         st.rerun()
 
 
+
+
+def get_ip_location():
+    try:
+        response = requests.get('https://ipapi.co/json/', timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            return data.get('city')
+    except:
+        return None
+
+
+
 # ===== AUTO DETECT =====
 with col_gps:
     st.write("")
 
     if st.button("📍 Auto Detect"):
 
-        location = get_geolocation()
+        detected_city = None
 
-        if location is not None and "coords" in location:
+        # ===== TRY GPS (OPTIONAL) =====
+        try:
+            location = get_geolocation()
 
-            lat = location["coords"]["latitude"]
-            lon = location["coords"]["longitude"]
+            if location is not None and "coords" in location:
+                lat = location["coords"]["latitude"]
+                lon = location["coords"]["longitude"]
 
-            try:
                 url = f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}"
-                res = requests.get(url).json()
+                res = requests.get(url, timeout=5).json()
 
                 if res:
-                    st.session_state.city_name = res[0]["name"]
-                    st.success(f"Detected: {res[0]['name']}")
-                    st.rerun()
-                else:
-                    st.warning("City not found from GPS")
+                    detected_city = res[0]["name"]
 
-            except:
-                st.error("Reverse lookup failed")
+        except:
+            pass
 
+        # ===== FALLBACK TO IP (MAIN WORKING PART) =====
+        if not detected_city:
+            with st.spinner("Detecting location..."):
+                detected_city = get_ip_location()
+
+        # ===== FINAL RESULT =====
+        if detected_city:
+            st.session_state.city_name = detected_city
+            st.success(f"Detected: {detected_city}")
+            st.rerun()
         else:
-            st.warning("⚠️ Allow location permission and click again")
-
+            st.error("❌ Could not detect location")
 
 # ===== FETCH (OUTSIDE COLUMNS) =====
-data = fetch_data(st.session_state["city_name"])
+data = fetch_data(st.session_state.city_name)
 
        
        
