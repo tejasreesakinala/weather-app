@@ -37,38 +37,48 @@ st.markdown("""
 }
 
 /* ===== REALISTIC CLOUD ===== */
+/* ===== ULTRA REALISTIC CLOUD ===== */
 .cloud {
     position: fixed;
-    width: 180px;
-    height: 60px;
-    background: rgba(255,255,255,0.75);
-    border-radius: 60px;
+    width: 220px;
+    height: 80px;
+
+    /* soft cloud using gradients */
+    background:
+        radial-gradient(circle at 30% 50%, rgba(255,255,255,0.9) 40%, transparent 60%),
+        radial-gradient(circle at 60% 40%, rgba(255,255,255,0.85) 35%, transparent 60%),
+        radial-gradient(circle at 80% 60%, rgba(255,255,255,0.8) 30%, transparent 60%),
+        radial-gradient(circle at 50% 70%, rgba(255,255,255,0.75) 35%, transparent 65%);
+
+    filter: blur(1.5px); /* softness */
+    border-radius: 100px;
+
     animation: cloudMove linear infinite;
     z-index: 0;
 }
 
-/* cloud shape (bumps) */
-.cloud::before {
-    content: '';
-    position: absolute;
-    top: -25px;
-    left: 20px;
-    width: 80px;
-    height: 80px;
-    background: rgba(255,255,255,0.75);
-    border-radius: 50%;
+/* smooth infinite movement */
+@keyframes cloudMove {
+    0% { transform: translateX(-30vw); }
+    100% { transform: translateX(120vw); }
 }
 
-.cloud::after {
-    content: '';
-    position: absolute;
-    top: -15px;
-    left: 90px;
-    width: 60px;
-    height: 60px;
-    background: rgba(255,255,255,0.75);
-    border-radius: 50%;
+/* depth layers */
+.cloud.slow {
+    animation-duration: 90s;
+    opacity: 0.35;
 }
+
+.cloud.medium {
+    animation-duration: 55s;
+    opacity: 0.6;
+}
+
+.cloud.fast {
+    animation-duration: 30s;
+    opacity: 0.9;
+}
+
 
 /* ===== SMOOTH CONTINUOUS MOVEMENT ===== */
 @keyframes cloudMove {
