@@ -112,23 +112,22 @@ with col_search:
 with col_gps:
     st.write("")
     if st.button("📍 Auto Detect"):
-        location = get_geolocation()
+        try:
+            ip_data = requests.get("https://ipinfo.io/json").json()
+            city = ip_data.get("city")
 
-        if location and "coords" in location:
-            lat = location['coords']['latitude']
-            lon = location['coords']['longitude']
-
-            detected = get_city_name(lat, lon)
-
-            if detected:
-                st.session_state.city_name = detected
+            if city:
+                st.session_state.city_name = city
+                st.success(f"Detected: {city}")
             else:
                 st.session_state.city_name = "Suryapet"
-        else:
-            st.warning("Allow location permission")
+                st.warning("Using default location")
+
+        except:
+            st.session_state.city_name = "Suryapet"
+            st.error("Detection failed")
 
         st.rerun()
-
 # ================= FETCH =================
 data = fetch_data(st.session_state.city_name)
 
