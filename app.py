@@ -1,16 +1,10 @@
-import streamlit as st
+Import streamlit as st
 import requests
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-import pytz
 import random
 from streamlit_js_eval import get_geolocation
-
-ist = pytz.timezone('Asia/Kolkata')
-hour = datetime.now(ist).hour
-
-st.write("Current Hour:", hour)
 
 # Fix wrong server locations (Streamlit Cloud issue)
 INVALID_LOCATIONS = ["the dalles", "boardman", "oregon"]
@@ -90,23 +84,13 @@ st.session_state.city_name = normalize_city(st.session_state.city_name)
 
 # ================= CONFIG =================
 API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
-st.set_page_config(page_title="WeatherX", layout="wide")
-
-# ===== TIME BASED BACKGROUND =====
-hour = datetime.now().hour
-
-if 6 <= hour < 17:
-    bg = "linear-gradient(-45deg, #4facfe, #00f2fe, #43cea2)"   # Morning
-elif 17 <= hour < 20:
-    bg = "linear-gradient(-45deg, #ff7e5f, #feb47b)"            # Evening
-else:
-    bg = "linear-gradient(-45deg, #0f2027, #203a43, #2c5364)"   # Night
+st.set_page_config(page_title="Weather Pro Ultimate", layout="wide")
 
 # ================= CSS =================
 st.markdown("""
 <style>
 .stApp {
-    background: {bg};
+    background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #1c92d2);
     background-size: 400% 400%;
     animation: gradient 15s ease infinite;
     color: white;
@@ -199,8 +183,8 @@ def fetch_data(city):
         return None
 
 # ================= TITLE =================
-st.title("🌤 WeatherX")
-st.caption("Smart Weather Intelligence System")
+st.title("🌤 Weather Pro Ultimate")
+
 
 st.caption("📍 Location: " + st.session_state.city_name)
 st.write("Current City:", st.session_state.city_name)
@@ -303,25 +287,6 @@ if data:
             """
         st.markdown(rain_html, unsafe_allow_html=True)
 
-
-    # ===== NIGHT STARS =====
-    if hour >= 20 or hour < 6:
-        stars_html = ""
-        for _ in range(80):
-            stars_html += f"""
-            <div style="
-                position: fixed;
-                top:{random.randint(0,100)}%;
-                left:{random.randint(0,100)}%;
-                width:2px;
-                height:2px;
-                background:white;
-                opacity:{random.uniform(0.3,1)};
-                z-index:0;
-            "></div>
-            """
-        st.markdown(stars_html, unsafe_allow_html=True)
-
 # ================= DISPLAY =================
 if data:
     w = data["current"]
@@ -357,3 +322,6 @@ if data:
 
 else:
     st.error("❌ City not found")
+
+
+Finalized code .....locked
