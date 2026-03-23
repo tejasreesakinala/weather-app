@@ -322,6 +322,3 @@ if data:
 
 else:
     st.error("❌ City not found")
-
-
-Finalized code .....locked
