@@ -37,21 +37,19 @@ st.markdown("""
 }
 
 /* ===== REALISTIC CLOUD ===== */
-/* ===== REAL CLOUD (NO PILL SHAPE) ===== */
+/* ===== CLEAN REALISTIC CLOUD ===== */
 .cloud {
     position: fixed;
-    width: 180px;
-    height: 100px;
+    width: 140px;
+    height: 60px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 50px;
 
-    /* REMOVE base background (this caused pill shape) */
-    background: none;
-
-    filter: blur(2px);
     animation: cloudMove linear infinite;
     z-index: 0;
 }
 
-/* Create cloud using blobs */
+/* top fluffy parts */
 .cloud::before,
 .cloud::after {
     content: "";
@@ -60,29 +58,32 @@ st.markdown("""
     border-radius: 50%;
 }
 
-/* Main big puff */
+/* left puff */
 .cloud::before {
-    width: 100px;
-    height: 100px;
-    left: 20px;
-    top: 10px;
+    width: 60px;
+    height: 60px;
+    top: -25px;
+    left: 10px;
 }
 
-/* Side puff */
+/* right puff */
 .cloud::after {
-    width: 70px;
-    height: 70px;
-    left: 90px;
-    top: 30px;
+    width: 80px;
+    height: 80px;
+    top: -35px;
+    left: 50px;
 }
 
-/* Extra puff using shadow trick (THIS makes it realistic) */
-.cloud {
-    box-shadow:
-        60px 10px 0 20px rgba(255,255,255,0.85),
-        120px 20px 0 10px rgba(255,255,255,0.8);
+/* smooth movement */
+@keyframes cloudMove {
+    0% { transform: translateX(-20vw); }
+    100% { transform: translateX(120vw); }
 }
 
+/* layers */
+.cloud.slow { animation-duration: 80s; opacity: 0.4; }
+.cloud.medium { animation-duration: 50s; opacity: 0.6; }
+.cloud.fast { animation-duration: 30s; opacity: 0.9; }
 /* Movement */
 @keyframes cloudMove {
     0% { transform: translateX(-30vw); }
