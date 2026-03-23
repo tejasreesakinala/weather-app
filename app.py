@@ -11,6 +11,8 @@ st.set_page_config(page_title="WeatherX", layout="wide")
 
 # ================= UI STYLE =================
 st.markdown("""
+<style>
+
 /* ================= DYNAMIC BACKGROUND ================= */
 .stApp {
     background: linear-gradient(-45deg, #1e3c72, #2a5298, #1c92d2, #2c5364);
@@ -27,31 +29,30 @@ st.markdown("""
 
 /* ================= CLOUD SYSTEM ================= */
 
-/* Back clouds (slow) */
+/* Back clouds */
 .cloud-back {
     position: fixed;
-    top: 100px;
-    width: 200px;
-    height: 80px;
+    width: 220px;
+    height: 90px;
     background: rgba(255,255,255,0.25);
-    border-radius: 80px;
+    border-radius: 100px;
     animation: moveCloudsSlow 90s linear infinite;
     filter: blur(3px);
     z-index: 0;
 }
 
-/* Front clouds (fast) */
+/* Front clouds */
 .cloud-front {
     position: fixed;
-    top: 200px;
-    width: 140px;
-    height: 60px;
+    width: 150px;
+    height: 70px;
     background: rgba(255,255,255,0.6);
-    border-radius: 60px;
+    border-radius: 70px;
     animation: moveCloudsFast 40s linear infinite;
     z-index: 0;
 }
 
+/* Smooth infinite movement */
 @keyframes moveCloudsSlow {
     0% { transform: translateX(-300px); }
     100% { transform: translateX(120vw); }
@@ -67,23 +68,35 @@ st.markdown("""
     position: fixed;
     top: 80px;
     left: 70%;
-    width: 100px;
-    height: 100px;
+    width: 110px;
+    height: 110px;
     background: radial-gradient(circle, #ffd700, #ff8c00);
     border-radius: 50%;
-    animation: sunFloat 10s ease-in-out infinite;
-    box-shadow: 0 0 60px rgba(255, 200, 0, 0.6);
+    animation: sunFloat 8s ease-in-out infinite;
+    box-shadow: 0 0 80px rgba(255, 200, 0, 0.7);
     z-index: 0;
 }
 
 @keyframes sunFloat {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(-25px); }
-    100% { transform: translateY(0); }
+    0% { transform: translateY(0) translateX(0); }
+    50% { transform: translateY(-30px) translateX(15px); }
+    100% { transform: translateY(0) translateX(0); }
 }
-<style>
-"""),unsafe_allow_html=True
-st.title("🌤 WeatherX")
+
+/* ================= FIX TEXT VISIBILITY ================= */
+.stButton>button {
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border-radius: 10px;
+}
+
+.stTextInput>div>div>input {
+    background: rgba(0,0,0,0.5);
+    color: white;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 # ================= FUNCTIONS =================
 @st.cache_data(ttl=300)
