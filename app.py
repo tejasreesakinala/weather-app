@@ -11,8 +11,11 @@ from streamlit_js_eval import get_geolocation
 INVALID_LOCATIONS = ["the dalles", "boardman", "oregon"]
 
 def fix_city(city):
-    if city and city.lower() in INVALID_LOCATIONS:
-        return "Hyderabad"
+    if city :
+        city_lower = city.lower()
+        for invalid in INVALID_LOCATIONS :
+            if invalid in city_lower:
+                return "Hyderabad"
     return city
     
 if "city_name" not in st.session_state:
@@ -22,7 +25,15 @@ if "city_name" not in st.session_state:
 API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 st.set_page_config(page_title="Weather Pro Ultimate", layout="wide")
 
-# ================= SESSION =================
+
+def auto_detect_city():
+    detected_city = get_ip_location()
+    if detected_city:
+        detected_city = fix_city(detected_city)
+        st.session_state.city_name = detected_city
+    else:
+        st.session_state.city_name = "Hyderabad"
+
 
 # ================= CSS =================
 st.markdown("""
@@ -91,24 +102,34 @@ st.markdown(cloud_html, unsafe_allow_html=True)
 def get_city_name(lat, lon):
     try:
         url = f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}"
-        res = requests.get(url).json()
+        res = requests.get(url, timeout=5).json()
         return res[0]['name'] if res else None
     except:
         return None
 
+
 def fetch_data(city):
-    curr = requests.get(
-        f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
-    ).json()
+    try:
+        curr = requests.get(
+            f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric",
+            timeout=5
+        ).json()
 
-    if curr.get("cod") != 200:
+        if curr.get("cod") != 200:
+            return None
+
+        fore = requests.get(
+            f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={API_KEY}&units=metric",
+            timeout=5
+        ).json()
+
+        if fore.get("cod") != "200":
+            return None
+
+        return {"current": curr, "forecast": fore}
+
+    except:
         return None
-
-    fore = requests.get(
-        f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={API_KEY}&units=metric"
-    ).json()
-
-    return {"current": curr, "forecast": fore}
 
 # ================= TITLE =================
 st.title("🌤 Weather Pro Ultimate")
@@ -145,27 +166,23 @@ def get_ip_location():
 
 
 # ===== AUTO DETECT =====
+# ===== AUTO DETECT FUNCTION =====
+def auto_detect_city():
+    detected_city = get_ip_location()
+
+    # fix wrong server location
+    detected_city = fix_city(detected_city)
+
+    if detected_city:
+        st.session_state.city_name = detected_city
+    else:
+        st.session_state.city_name = "Hyderabad"
+
+
+# ===== AUTO DETECT BUTTON =====
 with col_gps:
     st.write("")
-
-    if st.button("📍 Auto Detect"):
-
-        with st.spinner("Detecting your location..."):
-
-            detected_city = get_ip_location()
-
-            # FIX WRONG LOCATION HERE
-            detected_city = fix_city(detected_city)
-
-        if detected_city:
-            st.session_state.city_name = detected_city
-            st.success(f"📍 Detected: {detected_city}")
-        else:
-            st.session_state.city_name = "Hyderabad"
-            st.warning("Using default location: Hyderabad")
-
-        st.rerun()
-
+    st.button("📍 Auto Detect", on_click=auto_detect_city)
 # ===== FETCH (OUTSIDE COLUMNS) =====
 data = fetch_data(st.session_state.city_name)
 
