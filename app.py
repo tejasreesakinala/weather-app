@@ -37,50 +37,52 @@ st.markdown("""
 }
 
 /* ================= CLEAN CLOUD ================= */
+/* ===== REALISTIC CLOUD ===== */
 .cloud {
     position: fixed;
-    width: 140px;
-    height: 60px;
-    background: rgba(255,255,255,0.9);
-    border-radius: 50px;
+    width: 180px;
+    height: 70px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 60px;
+
+    filter: blur(2px);
     animation: cloudMove linear infinite;
     z-index: 0;
 }
 
-/* fluffy top */
+/* soft top shapes */
 .cloud::before {
     content: "";
     position: absolute;
-    width: 60px;
-    height: 60px;
-    background: rgba(255,255,255,0.9);
+    width: 90px;
+    height: 90px;
+    top: -35px;
+    left: 10px;
+    background: rgba(255,255,255,0.75);
     border-radius: 50%;
-    top: -25px;
-    left: 15px;
 }
 
 .cloud::after {
     content: "";
     position: absolute;
-    width: 80px;
-    height: 80px;
-    background: rgba(255,255,255,0.9);
+    width: 70px;
+    height: 70px;
+    top: -25px;
+    left: 80px;
+    background: rgba(255,255,255,0.65);
     border-radius: 50%;
-    top: -35px;
-    left: 55px;
 }
 
-/* SINGLE animation (no duplicates) */
+/* movement */
 @keyframes cloudMove {
-    0% { transform: translateX(-25vw); }
+    0% { transform: translateX(-30vw); }
     100% { transform: translateX(120vw); }
 }
 
 /* layers */
-.cloud.slow { animation-duration: 80s; opacity: 0.4; }
-.cloud.medium { animation-duration: 50s; opacity: 0.6; }
-.cloud.fast { animation-duration: 30s; opacity: 0.9; }
-
+.cloud.slow { animation-duration: 90s; opacity: 0.3; }
+.cloud.medium { animation-duration: 55s; opacity: 0.5; }
+.cloud.fast { animation-duration: 30s; opacity: 0.8; }
 /* ================= SUN ================= */
 .sun {
     position: fixed;
