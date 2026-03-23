@@ -111,6 +111,7 @@ st.write("Current City:", st.session_state.city_name)
 # ================= INPUT =================
 col_search, col_gps = st.columns([4,1])
 
+
 # ===== SEARCH =====
 with col_search:
     city = st.text_input(
@@ -119,10 +120,9 @@ with col_search:
         key="city_input_box"
     )
 
-    if city != st.session_state.city_name:
+    # ✅ FIXED CONDITION
+    if city and city != st.session_state.city_name:
         st.session_state.city_name = city
-        st.rerun()
-
 
 
 
@@ -152,16 +152,17 @@ with col_gps:
 
             detected_city = get_ip_location()
 
-            if detected_city:
-                st.session_state.city_name = detected_city
+        # DEBUG (IMPORTANT)
+        st.write("DEBUG:", detected_city)
 
-                # 👇 SHOW MESSAGE BEFORE RERUN
-                st.toast(f"📍 Detected: {detected_city}")
+        if detected_city:
+            st.session_state.city_name = detected_city
+            st.success(f"📍 Detected: {detected_city}")
+        else:
+            st.session_state.city_name = "Hyderabad"
+            st.warning("⚠️ Using default: Hyderabad (IP detection failed)")
 
-            else:
-                st.session_state.city_name = "Hyderabad"
-                st.toast("⚠️ Using default: Hyderabad")
-
+        st.rerun()
         st.rerun()
 
 # ===== FETCH (OUTSIDE COLUMNS) =====
