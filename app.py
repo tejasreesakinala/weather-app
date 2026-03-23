@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 import geocoder
 from difflib import get_close_matches
+import random
 
 
 API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
@@ -40,40 +41,34 @@ st.markdown("""
 
 
 
-
-/* ===== SVG CLOUD SYSTEM ===== */
 .cloud {
     position: fixed;
-    width: 180px;
-    opacity: 0.8;
+    opacity: 0.85;
     animation: cloudMove linear infinite;
     z-index: 0;
 }
 
+/* depth layers */
 .cloud.back {
-    animation-duration: 120s;
+    animation-duration: 140s;
     opacity: 0.3;
-    transform: scale(1.4);
 }
 
 .cloud.mid {
-    animation-duration: 70s;
+    animation-duration: 80s;
     opacity: 0.6;
-    transform: scale(1.1);
 }
 
 .cloud.front {
-    animation-duration: 35s;
+    animation-duration: 45s;
     opacity: 0.9;
 }
 
+/* smooth continuous flow */
 @keyframes cloudMove {
     from { transform: translateX(-120vw); }
     to { transform: translateX(120vw); }
 }
-
-
-
 
 
 
@@ -107,6 +102,55 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("🌤 Weather Pro Dashboard")
+
+ cloud_svg = """
+<svg viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
+  <g filter="url(#shadow)">
+    <ellipse cx="40" cy="35" rx="35" ry="20" fill="white"/>
+    <ellipse cx="70" cy="30" rx="30" ry="18" fill="white"/>
+    <ellipse cx="90" cy="38" rx="25" ry="15" fill="white"/>
+  </g>
+  <defs>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+</svg>
+"""
+
+for i in range(8):
+    size = random.randint(120, 220)
+    top = random.randint(50, 300)
+    speed_type = random.choice(["back", "mid", "front"])
+    delay = random.uniform(-120, 0)
+
+    st.markdown(
+        f"""
+        <div class="cloud {speed_type}" 
+             style="
+                top:{top}px; 
+                width:{size}px; 
+                animation-delay:{delay}s;
+             ">
+             {cloud_svg}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    
+            
+            # BACK CLOUDS
+            st.markdown(f'<div class="cloud back" style="top:80px; left:10%;">{cloud_svg}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="cloud back" style="top:200px; left:60%;">{cloud_svg}</div>', unsafe_allow_html=True)
+            
+            # MID CLOUDS
+            st.markdown(f'<div class="cloud mid" style="top:140px; left:30%;">{cloud_svg}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="cloud mid" style="top:260px; left:80%;">{cloud_svg}</div>', unsafe_allow_html=True)
+            
+            # FRONT CLOUDS
+            st.markdown(f'<div class="cloud front" style="top:100px; left:50%;">{cloud_svg}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="cloud front" style="top:220px; left:0%;">{cloud_svg}</div>', unsafe_allow_html=True)
 
 # ================= LOCATION DETECT =================
 def detect_location():
@@ -221,23 +265,7 @@ if st.button("Get Weather"):
 
             # ===== PERFECT SVG CLOUDS =====
 
-            cloud_svg = """
-            <svg viewBox="0 0 64 32" xmlns="http://www.w3.org/2000/svg">
-              <path fill="white" d="M20 28h24a10 10 0 0 0 0-20 14 14 0 0 0-27-2A9 9 0 0 0 20 28z"/>
-            </svg>
-            """
-            
-            # BACK CLOUDS
-            st.markdown(f'<div class="cloud back" style="top:80px; left:10%;">{cloud_svg}</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="cloud back" style="top:200px; left:60%;">{cloud_svg}</div>', unsafe_allow_html=True)
-            
-            # MID CLOUDS
-            st.markdown(f'<div class="cloud mid" style="top:140px; left:30%;">{cloud_svg}</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="cloud mid" style="top:260px; left:80%;">{cloud_svg}</div>', unsafe_allow_html=True)
-            
-            # FRONT CLOUDS
-            st.markdown(f'<div class="cloud front" style="top:100px; left:50%;">{cloud_svg}</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="cloud front" style="top:220px; left:0%;">{cloud_svg}</div>', unsafe_allow_html=True)
+           
                         
             # Sun only if clear
             if "clear" in weather:
