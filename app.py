@@ -120,7 +120,7 @@ with col_gps:
     if st.button("📍 Auto Detect"):
 
     # STEP 1: Try GPS (accurate)
-    location = get_geolocation()
+        location = get_geolocation()
 
     if location and "coords" in location:
         lat = location["coords"]["latitude"]
