@@ -36,21 +36,52 @@ st.markdown("""
     backdrop-filter: blur(12px);
 }
 
-/* ================= CLOUDS ================= */
+/* ===== REALISTIC CLOUD ===== */
 .cloud {
     position: fixed;
-    width: 140px;
+    width: 180px;
     height: 60px;
-    background: rgba(255,255,255,0.7);
+    background: rgba(255,255,255,0.75);
     border-radius: 60px;
-    animation: moveCloud 40s linear infinite;
+    animation: cloudMove linear infinite;
     z-index: 0;
 }
 
-@keyframes moveCloud {
-    0% { transform: translateX(-200px); }
+/* cloud shape (bumps) */
+.cloud::before {
+    content: '';
+    position: absolute;
+    top: -25px;
+    left: 20px;
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,0.75);
+    border-radius: 50%;
+}
+
+.cloud::after {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: 90px;
+    width: 60px;
+    height: 60px;
+    background: rgba(255,255,255,0.75);
+    border-radius: 50%;
+}
+
+/* ===== SMOOTH CONTINUOUS MOVEMENT ===== */
+@keyframes cloudMove {
+    0% { transform: translateX(-20vw); }
     100% { transform: translateX(120vw); }
 }
+
+/* depth layers */
+.cloud.slow { animation-duration: 80s; opacity: 0.4; }
+.cloud.medium { animation-duration: 50s; opacity: 0.6; }
+.cloud.fast { animation-duration: 30s; opacity: 0.9; }
+
+
 
 /* ================= SUN ================= */
 .sun {
