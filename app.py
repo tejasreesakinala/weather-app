@@ -113,22 +113,22 @@ with col_search:
 with col_gps:
     st.write("")
     if st.button("📍 Auto Detect"):
-    try:
-        ip_data = requests.get("https://ipinfo.io/json").json()
-        detected_city = ip_data.get("city")
-
-        if detected_city:
-            st.session_state.city_name = detected_city
-            st.rerun()
-        else:
-            st.warning("City not found from IP")
-
-    except:
-        st.error("Auto detect failed")
-        if detected_city:
-            st.session_state["city_name"] = detected_city
-        else:
-            st.session_state["city_name"] = "Suryapet"
+        try:
+            ip_data = requests.get("https://ipinfo.io/json").json()
+            detected_city = ip_data.get("city")
+    
+            if detected_city:
+                st.session_state.city_name = detected_city
+                st.rerun()
+            else:
+                st.warning("City not found from IP")
+    
+        except:
+            st.error("Auto detect failed")
+            if detected_city:
+                st.session_state["city_name"] = detected_city
+            else:
+                st.session_state["city_name"] = "Suryapet"
 
         st.rerun()
 # ================= FETCH =================
