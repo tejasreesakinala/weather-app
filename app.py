@@ -17,9 +17,68 @@ def fix_city(city):
             if invalid in city_lower:
                 return "Hyderabad"
     return city
+
+def normalize_city(city):
+    if not city:
+        return city
+
+    city = city.lower().strip()
+
+    mapping = {
+        # Andhra / Telangana
+        "vizag": "Visakhapatnam",
+        "viz": "Visakhapatnam",
+        "vizianagaram": "Vizianagaram",
+
+        "hyd": "Hyderabad",
+        "secunderabad": "Hyderabad",
+
+        "rr": "Ranga Reddy",
+        "rangareddy": "Ranga Reddy",
+        "ranga reddy": "Ranga Reddy",
+
+        "suryapet": "Suryapet",
+        "nalgonda": "Nalgonda",
+        "warangal": "Warangal",
+        "karimnagar": "Karimnagar",
+        "khammam": "Khammam",
+
+        # Common big cities (India)
+        "blore": "Bangalore",
+        "bengaluru": "Bangalore",
+        "bangalore": "Bangalore",
+
+        "madras": "Chennai",
+        "chennai": "Chennai",
+
+        "bombay": "Mumbai",
+        "mumbai": "Mumbai",
+
+        "delhi": "New Delhi",
+        "new delhi": "New Delhi",
+
+        "kolkata": "Kolkata",
+        "calcutta": "Kolkata"
+    }
+
+    # Step 1: exact match
+    if city in mapping:
+        return mapping[city]
+
+    # Step 2: partial match (VERY IMPORTANT)
+    for key in mapping:
+        if key in city:
+            return mapping[key]
+
+    # Step 3: default formatting
+    return city.title()
+
+
     
 if "city_name" not in st.session_state:
     st.session_state.city_name = "Suryapet"
+
+st.session_state.city_name = normalize_city(st.session_state.city_name)
 
 # ================= CONFIG =================
 API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
@@ -173,8 +232,8 @@ with col_gps:
     st.write("")
     st.button("📍 Auto Detect", on_click=auto_detect_city)
 # ===== FETCH (OUTSIDE COLUMNS) =====
-data = fetch_data(st.session_state.city_name)
-
+clean_city = normalize_city(st.session_state.city_name)
+data = fetch_data(clean_city)
        
        
 # ================= EFFECTS =================
