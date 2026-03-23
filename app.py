@@ -41,29 +41,26 @@ st.markdown("""
 
 
 
-/* ===== CLEAN NATURAL CLOUD ===== */
+/* ===== TRUE REALISTIC CLOUD (NO PILL SHAPE) ===== */
 .cloud {
     position: fixed;
-    width: 140px;
-    height: 50px;
+    width: 200px;
+    height: 100px;
 
-    background: #ffffff;
-    border-radius: 30px;
+    background:
+        radial-gradient(circle at 30% 60%, rgba(255,255,255,0.95) 35%, transparent 60%),
+        radial-gradient(circle at 55% 50%, rgba(255,255,255,0.9) 40%, transparent 65%),
+        radial-gradient(circle at 75% 65%, rgba(255,255,255,0.85) 35%, transparent 65%),
+        radial-gradient(circle at 50% 80%, rgba(255,255,255,0.7) 30%, transparent 70%);
 
-    /* natural bumps */
-    box-shadow:
-        25px -15px 0 8px #fff,
-        55px -10px 0 12px #fff,
-        80px 0px 0 8px #fff;
-
-    opacity: 0.85;
-    filter: blur(0.8px);
+    filter: blur(2px);   /* soft blending but NOT too much */
+    opacity: 0.9;
 
     animation: cloudMove linear infinite;
     z-index: 0;
 }
 
-/* continuous movement (NO WAITING) */
+/* smooth infinite movement */
 @keyframes cloudMove {
     from { transform: translateX(-120vw); }
     to { transform: translateX(120vw); }
@@ -73,7 +70,7 @@ st.markdown("""
 .cloud.back {
     animation-duration: 120s;
     opacity: 0.3;
-    transform: scale(1.3);
+    transform: scale(1.4);
 }
 
 .cloud.mid {
