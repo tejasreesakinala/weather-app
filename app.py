@@ -6,14 +6,15 @@ from datetime import datetime
 import random
 from streamlit_js_eval import get_geolocation
 
+if "city_name" not in st.session_state:
+    st.session_state.city_name = "Suryapet"
+
 # ================= CONFIG =================
 API_KEY = "1a6b0e5216a955f75ea2e9a0a5a2edcc"
 st.set_page_config(page_title="Weather Pro Ultimate", layout="wide")
 
 # ================= SESSION =================
-if city != st.session_state.city_name:
-    st.session_state.city_name = city
-    st.rerun()
+
 
 # ================= CSS =================
 st.markdown("""
@@ -110,6 +111,10 @@ col_search, col_gps = st.columns([4,1])
 with col_search:
     city = st.text_input("Search City",value = st.session_state.city_name, key="city_input_box")
 
+if city != st.session_state.city_name:
+    st.session_state.city_name = city
+    st.rerun()
+
 with col_gps:
     st.write("")
     if st.button("📍 Auto Detect"):
@@ -121,14 +126,11 @@ with col_gps:
                 st.session_state.city_name = detected_city
                 st.rerun()
             else:
-                st.warning("City not found from IP")
-    
+                st.session_state.city_name = "Suryapet"
+
+            st.rerun
         except:
             st.error("Auto detect failed")
-            if detected_city:
-                st.session_state["city_name"] = detected_city
-            else:
-                st.session_state["city_name"] = "Suryapet"
 
         st.rerun()
 # ================= FETCH =================
