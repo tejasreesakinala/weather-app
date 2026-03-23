@@ -38,51 +38,36 @@ st.markdown("""
 
 /* ================= CLEAN CLOUD ================= */
 /* ===== REALISTIC CLOUD ===== */
+/* ===== ULTRA REALISTIC CLOUD ===== */
 .cloud {
     position: fixed;
-    width: 180px;
-    height: 70px;
-    background: rgba(255,255,255,0.7);
-    border-radius: 60px;
+    width: 220px;
+    height: 90px;
 
-    filter: blur(2px);
+    background:
+        radial-gradient(ellipse at 30% 60%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%),
+        radial-gradient(ellipse at 60% 40%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 70%),
+        radial-gradient(ellipse at 80% 60%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 70%),
+        radial-gradient(ellipse at 50% 70%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%);
+
+    filter: blur(6px);
+    opacity: 0.8;
+
     animation: cloudMove linear infinite;
     z-index: 0;
 }
 
-/* soft top shapes */
-.cloud::before {
-    content: "";
-    position: absolute;
-    width: 90px;
-    height: 90px;
-    top: -35px;
-    left: 10px;
-    background: rgba(255,255,255,0.75);
-    border-radius: 50%;
-}
-
-.cloud::after {
-    content: "";
-    position: absolute;
-    width: 70px;
-    height: 70px;
-    top: -25px;
-    left: 80px;
-    background: rgba(255,255,255,0.65);
-    border-radius: 50%;
-}
-
-/* movement */
 @keyframes cloudMove {
-    0% { transform: translateX(-30vw); }
+    0% { transform: translateX(-25vw); }
     100% { transform: translateX(120vw); }
 }
 
 /* layers */
-.cloud.slow { animation-duration: 90s; opacity: 0.3; }
-.cloud.medium { animation-duration: 55s; opacity: 0.5; }
-.cloud.fast { animation-duration: 30s; opacity: 0.8; }
+.cloud.slow { animation-duration: 100s; opacity: 0.3; }
+.cloud.medium { animation-duration: 60s; opacity: 0.5; }
+.cloud.fast { animation-duration: 35s; opacity: 0.8; }
+/* movement */
+
 /* ================= SUN ================= */
 .sun {
     position: fixed;
