@@ -159,7 +159,7 @@ def detect_location():
                 city_entry.delete(0, tk.END)
                 city_entry.insert(0, city.title())
     except:
-        city_entry.insert(0,"")
+        city_entry.insert(0,"Suryapet")
 
 # ================= WEATHER =================
 def get_weather():
